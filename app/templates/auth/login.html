@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Login — Torneo Calcio{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+    <div class="login-card fade-in-up">
+        <div class="login-icon">
+            <i class="fa-solid fa-lock"></i>
+        </div>
+        <h3 class="text-center fw-700 mb-1">Bentornato</h3>
+        <p class="text-center text-secondary mb-4" style="font-size:0.9rem;">Accedi al tuo account del torneo</p>
+
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <div class="mb-3">
+                <label for="username" class="form-label fw-500 text-secondary"
+                    style="font-size:0.85rem;">Username</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0"
+                        style="border-color: var(--border-subtle); color: var(--text-muted);">
+                        <i class="fa-solid fa-user"></i>
+                    </span>
+                    <input type="text" class="form-control border-start-0" id="username" name="username"
+                        placeholder="Il tuo username" required autofocus style="border-color: var(--border-subtle);">
+                </div>
+            </div>
+            <div class="mb-4">
+                <label for="password" class="form-label fw-500 text-secondary"
+                    style="font-size:0.85rem;">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0"
+                        style="border-color: var(--border-subtle); color: var(--text-muted);">
+                        <i class="fa-solid fa-key"></i>
+                    </span>
+                    <input type="password" class="form-control border-start-0" id="password" name="password"
+                        placeholder="••••••••" required style="border-color: var(--border-subtle);">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-accent w-100 py-2 fw-600 rounded-3">
+                <i class="fa-solid fa-right-to-bracket me-2"></i>Accedi
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

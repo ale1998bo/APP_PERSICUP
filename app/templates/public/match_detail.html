@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}{{ match.home_team.name }} vs {{ match.away_team.name }} — Torneo Calcio{% endblock %}
+
+{% block content %}
+
+<!-- ── Back link ──────────────────────────────────────────────────── -->
+{% if match.phase == 'group' %}
+<a href="{{ url_for('main.group_detail', group=match.group) }}"
+    class="btn btn-sm btn-outline-secondary rounded-pill mb-3">
+    <i class="fa-solid fa-arrow-left me-1"></i>Torna al Girone {{ match.group }}
+</a>
+{% else %}
+<a href="{{ url_for('main.tournament') }}" class="btn btn-sm btn-outline-secondary rounded-pill mb-3">
+    <i class="fa-solid fa-arrow-left me-1"></i>Torna al Tabellone
+</a>
+{% endif %}
+
+<!-- ── Match Header ──────────────────────────────────────────────── -->
+<div class="hero-banner fade-in-up text-center">
+    <div class="d-flex justify-content-center align-items-center gap-4 flex-wrap">
+        <div class="text-end" style="min-width:120px;">
+            <h3 class="mb-0 fw-800">{{ match.home_team.name }}</h3>
+        </div>
+        <div class="px-3">
+            {% if match.played %}
+            <div style="font-size:2.5rem; font-weight:800; letter-spacing:2px;">
+                {{ match.home_score }} - {{ match.away_score }}
+            </div>
+            <span class="badge bg-success rounded-pill">Giocata</span>
+            {% else %}
+            <div style="font-size:2rem; font-weight:600; color:var(--text-secondary);">
+                vs
+            </div>
+            <span class="badge bg-secondary rounded-pill">Da giocare</span>
+            {% endif %}
+            {% if match.phase == 'group' %}
+            <span class="group-badge ms-2">{{ match.group }}</span>
+            {% else %}
+            <span class="badge bg-warning text-dark rounded-pill ms-2">{{ match.phase|upper }}</span>
+            {% endif %}
+        </div>
+        <div class="text-start" style="min-width:120px;">
+            <h3 class="mb-0 fw-800">{{ match.away_team.name }}</h3>
+        </div>
+    </div>
+</div>
+
+{% if match.played %}
+<div class="row g-4 mt-2">
+
+    <!-- ── Marcatori Casa ────────────────────────────────────────── -->
+    <div class="col-md-6 fade-in-up">
+        <div class="card-premium">
+            <div class="card-header">
+                <i class="fa-solid fa-futbol me-2 text-success"></i>{{ match.home_team.name }}
+                <span class="badge bg-success rounded-pill ms-2">{{ home_goals|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if home_goals %}
+                <ul class="list-unstyled mb-0">
+                    {% for g in home_goals %}
+                    <li class="py-2 border-bottom border-secondary border-opacity-25">
+                        <i class="fa-solid fa-futbol text-success me-2"></i>
+                        <strong>{{ g.player_name }}</strong>
+                        {% if g.minute %}
+                        <span class="text-muted ms-1">{{ g.minute }}'</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted mb-0 text-center">Nessun gol</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Marcatori Ospite ──────────────────────────────────────── -->
+    <div class="col-md-6 fade-in-up">
+        <div class="card-premium">
+            <div class="card-header">
+                <i class="fa-solid fa-futbol me-2 text-info"></i>{{ match.away_team.name }}
+                <span class="badge bg-info rounded-pill ms-2">{{ away_goals|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if away_goals %}
+                <ul class="list-unstyled mb-0">
+                    {% for g in away_goals %}
+                    <li class="py-2 border-bottom border-secondary border-opacity-25">
+                        <i class="fa-solid fa-futbol text-info me-2"></i>
+                        <strong>{{ g.player_name }}</strong>
+                        {% if g.minute %}
+                        <span class="text-muted ms-1">{{ g.minute }}'</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted mb-0 text-center">Nessun gol</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── MVP ────────────────────────────────────────────────────────── -->
+{% if match.man_of_match %}
+<div class="fade-in-up mt-4">
+    <div class="card-premium text-center">
+        <div class="card-body py-3">
+            <i class="fa-solid fa-star text-warning fa-2x mb-2"></i>
+            <h5 class="fw-700 mb-0">Miglior Giocatore</h5>
+            <p class="mb-0 mt-1" style="font-size:1.2rem; color:var(--accent-primary);">{{ match.man_of_match }}</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="text-center py-5 text-secondary mt-4">
+    <i class="fa-solid fa-clock fa-3x mb-3 d-block"></i>
+    <p class="mb-0">Partita non ancora giocata. I dettagli saranno disponibili dopo il fischio finale.</p>
+</div>
+{% endif %}
+
+{% endblock %}

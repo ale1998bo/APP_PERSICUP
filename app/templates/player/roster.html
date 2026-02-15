@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block title %}Gestione Rosa — {{ team.name }}{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero Banner ───────────────────────────────────────────────────── -->
+<div class="hero-banner fade-in-up">
+    <div class="d-flex align-items-center gap-3 mb-2">
+        <span class="group-badge" style="width:48px;height:48px;font-size:1.2rem;">{{ team.group }}</span>
+        <div>
+            <h1 class="mb-0">{{ team.name }}</h1>
+            <span class="hero-subtitle"><i class="fa-solid fa-crown me-1"></i>Gestione Rosa — Capitano</span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- ── Aggiungi Giocatore ─────────────────────────────────────── -->
+    <div class="col-lg-5 fade-in-up">
+        <div class="card-premium">
+            <div class="card-header"><i class="fa-solid fa-user-plus me-2"></i>Aggiungi Giocatore</div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+
+                    <div class="mb-3">
+                        <label for="nome" class="form-label fw-500 text-secondary"
+                            style="font-size:0.85rem;">Nome</label>
+                        <input type="text" class="form-control" id="nome" name="nome" required placeholder="es. Marco"
+                            style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cognome" class="form-label fw-500 text-secondary"
+                            style="font-size:0.85rem;">Cognome</label>
+                        <input type="text" class="form-control" id="cognome" name="cognome" required
+                            placeholder="es. Rossi"
+                            style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="scadenza_visita_medica" class="form-label fw-500 text-secondary"
+                            style="font-size:0.85rem;">
+                            <i class="fa-solid fa-calendar-check me-1"></i>Scadenza Visita Medica
+                        </label>
+                        <input type="date" class="form-control" id="scadenza_visita_medica"
+                            name="scadenza_visita_medica"
+                            style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="visita_medica" class="form-label fw-500 text-secondary" style="font-size:0.85rem;">
+                            <i class="fa-solid fa-file-medical me-1"></i>Visita Medica (PDF o Foto)
+                        </label>
+                        <input type="file" class="form-control" id="visita_medica" name="visita_medica"
+                            accept=".pdf,.png,.jpg,.jpeg,.gif,.webp"
+                            style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
+                        <small class="text-muted">Formati accettati: PDF, PNG, JPG, JPEG, GIF, WebP (max 16MB)</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-accent w-100 rounded-3 fw-600">
+                        <i class="fa-solid fa-user-plus me-2"></i>Aggiungi alla Rosa
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Rosa Squadra ──────────────────────────────────────────── -->
+    <div class="col-lg-7 fade-in-up">
+        <div class="card-premium">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-list me-2"></i>Rosa Squadra</span>
+                <span class="badge bg-secondary rounded-pill">{{ roster_players|length }} giocatori</span>
+            </div>
+            <div class="card-body p-0">
+                {% if roster_players %}
+                <div class="table-responsive-premium">
+                    <table class="table table-premium mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Cognome</th>
+                                <th>Nome</th>
+                                <th>Scadenza Visita</th>
+                                <th>Certificato</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in roster_players %}
+                            <tr>
+                                <td class="text-muted">{{ loop.index }}</td>
+                                <td class="fw-600">{{ p.cognome }}</td>
+                                <td>{{ p.nome }}</td>
+                                <td>
+                                    {% if p.scadenza_visita_medica %}
+                                    {% if p.visita_scaduta %}
+                                    <span class="badge bg-danger rounded-pill">
+                                        <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                                        {{ p.scadenza_visita_medica.strftime('%d/%m/%Y') }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-success rounded-pill">
+                                        <i class="fa-solid fa-circle-check me-1"></i>
+                                        {{ p.scadenza_visita_medica.strftime('%d/%m/%Y') }}
+                                    </span>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark rounded-pill">
+                                        <i class="fa-solid fa-question me-1"></i>Non inserita
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if p.file_visita_medica %}
+                                    <a href="{{ url_for('uploaded_file', filename=p.file_visita_medica) }}"
+                                        target="_blank" class="btn btn-sm btn-outline-info rounded-3">
+                                        <i class="fa-solid fa-eye me-1"></i>Vedi
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form method="POST"
+                                        action="{{ url_for('player.delete_roster_player', player_id=p.id) }}"
+                                        class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-3"
+                                            onclick="return confirm('Rimuovere {{ p.nome }} {{ p.cognome }} dalla rosa?')"
+                                            title="Rimuovi">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-secondary">
+                    <i class="fa-solid fa-users-slash fa-2x mb-2 d-block"></i>
+                    <p class="mb-0">Nessun giocatore nella rosa. Aggiungi il primo!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

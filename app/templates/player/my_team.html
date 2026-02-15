@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}La mia Squadra — Torneo Calcio{% endblock %}
+
+{% block content %}
+
+{% if not team %}
+<!-- No team linked -->
+<div class="text-center py-5 text-secondary fade-in-up">
+    <i class="fa-solid fa-user-slash fa-3x mb-3 d-block"></i>
+    <h5>Nessuna squadra associata</h5>
+    <p>Il tuo account non è collegato a nessuna squadra. Contatta un amministratore.</p>
+</div>
+{% else %}
+
+<!-- ── Hero Banner ───────────────────────────────────────────────────── -->
+<div class="hero-banner fade-in-up">
+    <div class="d-flex align-items-center gap-3 mb-2">
+        <span class="group-badge" style="width:48px;height:48px;font-size:1.2rem;">{{ team.group }}</span>
+        <div>
+            <h1 class="mb-0">{{ team.name }}</h1>
+            <span class="hero-subtitle">Girone {{ team.group }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- ── Prossime Partite ──────────────────────────────────────────── -->
+    <div class="col-md-6 fade-in-up">
+        <div class="card-premium h-100">
+            <div class="card-header">
+                <i class="fa-solid fa-calendar-days me-2"></i>Prossime Partite
+            </div>
+            <div class="card-body">
+                {% if upcoming %}
+                {% for match in upcoming %}
+                <div class="match-card">
+                    <span class="team-name home">{{ match.home_team.name }}</span>
+                    <div class="score-display">
+                        <span class="vs-text">VS</span>
+                    </div>
+                    <span class="team-name away">{{ match.away_team.name }}</span>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center text-muted py-3">
+                    <i class="fa-solid fa-check-circle fa-2x mb-2 d-block text-success"></i>
+                    Tutte le partite sono state giocate!
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Risultati Recenti ─────────────────────────────────────────── -->
+    <div class="col-md-6 fade-in-up">
+        <div class="card-premium h-100">
+            <div class="card-header">
+                <i class="fa-solid fa-clock-rotate-left me-2"></i>Risultati Recenti
+            </div>
+            <div class="card-body">
+                {% if recent %}
+                {% for match in recent %}
+                <div class="match-card">
+                    <span class="team-name home">{{ match.home_team.name }}</span>
+                    <div class="score-display">
+                        {{ match.home_score }} - {{ match.away_score }}
+                    </div>
+                    <span class="team-name away">{{ match.away_team.name }}</span>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center text-muted py-3">
+                    <i class="fa-solid fa-hourglass-half fa-2x mb-2 d-block"></i>
+                    Nessuna partita giocata ancora.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endif %}
+{% endblock %}

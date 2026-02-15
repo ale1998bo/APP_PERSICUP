@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Tabellone — Torneo Calcio{% endblock %}
+
+{% block content %}
+<h2 class="section-title">
+    <i class="fa-solid fa-sitemap"></i>Tabellone Fase Finale
+</h2>
+
+{% if not quarters %}
+<div class="text-center py-5 text-secondary fade-in-up">
+    <i class="fa-solid fa-hourglass-half fa-3x mb-3 d-block" style="color: var(--warning);"></i>
+    <h5>Fase finale non ancora generata</h5>
+    <p>I quarti di finale verranno generati al termine dei gironi.</p>
+</div>
+{% else %}
+
+<div class="bracket-grid" style="overflow-x: auto;">
+    <div class="d-flex align-items-stretch gap-3" style="min-width: 700px;">
+
+        <!-- ── Quarti di Finale ─────────────────────────────────────── -->
+        <div class="bracket-round flex-fill fade-in-up">
+            <h6 class="text-center text-secondary text-uppercase fw-700 mb-3"
+                style="font-size:0.75rem; letter-spacing:2px;">
+                Quarti di Finale
+            </h6>
+            {% for match in quarters %}
+            <div class="bracket-match">
+                <div
+                    class="bracket-team {{ 'fw-700' if match.played and match.home_score > match.away_score else '' }}">
+                    <span>{{ match.home_team.name }}</span>
+                    <span class="bracket-score">{{ match.home_score if match.played else '' }}</span>
+                </div>
+                <div
+                    class="bracket-team {{ 'fw-700' if match.played and match.away_score > match.home_score else '' }}">
+                    <span>{{ match.away_team.name }}</span>
+                    <span class="bracket-score">{{ match.away_score if match.played else '' }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- ── Connector ────────────────────────────────────────────── -->
+        <div class="bracket-connector">
+            <i class="fa-solid fa-angles-right fa-lg"></i>
+        </div>
+
+        <!-- ── Semifinali ───────────────────────────────────────────── -->
+        <div class="bracket-round flex-fill fade-in-up">
+            <h6 class="text-center text-secondary text-uppercase fw-700 mb-3"
+                style="font-size:0.75rem; letter-spacing:2px;">
+                Semifinali
+            </h6>
+            {% if semis %}
+            {% for match in semis %}
+            <div class="bracket-match">
+                <div
+                    class="bracket-team {{ 'fw-700' if match.played and match.home_score > match.away_score else '' }}">
+                    <span>{{ match.home_team.name }}</span>
+                    <span class="bracket-score">{{ match.home_score if match.played else '' }}</span>
+                </div>
+                <div
+                    class="bracket-team {{ 'fw-700' if match.played and match.away_score > match.home_score else '' }}">
+                    <span>{{ match.away_team.name }}</span>
+                    <span class="bracket-score">{{ match.away_score if match.played else '' }}</span>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="bracket-match text-center text-muted py-3">
+                <i class="fa-solid fa-hourglass-half me-1"></i> In attesa
+            </div>
+            <div class="bracket-match text-center text-muted py-3">
+                <i class="fa-solid fa-hourglass-half me-1"></i> In attesa
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ── Connector ────────────────────────────────────────────── -->
+        <div class="bracket-connector">
+            <i class="fa-solid fa-angles-right fa-lg"></i>
+        </div>
+
+        <!-- ── Finale ───────────────────────────────────────────────── -->
+        <div class="bracket-round flex-fill fade-in-up">
+            <h6 class="text-center text-secondary text-uppercase fw-700 mb-3"
+                style="font-size:0.75rem; letter-spacing:2px;">
+                <i class="fa-solid fa-crown text-warning me-1"></i>Finale
+            </h6>
+            {% if final %}
+            <div class="bracket-match" style="border-color: var(--accent);">
+                <div
+                    class="bracket-team {{ 'fw-700' if final.played and final.home_score > final.away_score else '' }}">
+                    <span>{{ final.home_team.name }}</span>
+                    <span class="bracket-score">{{ final.home_score if final.played else '' }}</span>
+                </div>
+                <div
+                    class="bracket-team {{ 'fw-700' if final.played and final.away_score > final.home_score else '' }}">
+                    <span>{{ final.away_team.name }}</span>
+                    <span class="bracket-score">{{ final.away_score if final.played else '' }}</span>
+                </div>
+            </div>
+            {% else %}
+            <div class="bracket-match text-center text-muted py-3" style="border-color: var(--warning);">
+                <i class="fa-solid fa-trophy text-warning me-1"></i> In attesa
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+{% endif %}
+{% endblock %}

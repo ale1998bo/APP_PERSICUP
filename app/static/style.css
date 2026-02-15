@@ -1,0 +1,460 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   TORNEO CALCIO — Premium Dark Theme
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ── Palette ───────────────────────────────────────────── */
+    --bg-primary:     #0b0e14;
+    --bg-secondary:   #111827;
+    --bg-card:        #1a1f2e;
+    --bg-card-hover:  #232a3d;
+    --border-subtle:  rgba(255, 255, 255, 0.06);
+
+    --accent:         #10b981;   /* Emerald Green */
+    --accent-glow:    rgba(16, 185, 129, 0.25);
+    --accent-hover:   #34d399;
+    --danger:         #ef4444;
+    --warning:        #f59e0b;
+    --info:           #3b82f6;
+
+    --text-primary:   #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted:     #64748b;
+
+    --navbar-bg:      rgba(11, 14, 20, 0.85);
+
+    --radius:         1rem;
+    --radius-sm:      0.625rem;
+    --shadow:         0 4px 24px rgba(0, 0, 0, 0.35);
+    --shadow-sm:      0 2px 12px rgba(0, 0, 0, 0.2);
+    --shadow-accent:  0 4px 20px var(--accent-glow);
+}
+
+/* ── Global ─────────────────────────────────────────────────────────────── */
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+}
+
+::selection {
+    background: var(--accent);
+    color: var(--bg-primary);
+}
+
+/* ── Navbar ─────────────────────────────────────────────────────────────── */
+.navbar-premium {
+    background: var(--navbar-bg);
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 0.75rem 0;
+    transition: background 0.3s;
+}
+
+.navbar-brand {
+    font-size: 1.25rem;
+    letter-spacing: -0.5px;
+    color: var(--text-primary) !important;
+}
+
+.navbar-brand i {
+    color: var(--accent);
+    font-size: 1.35rem;
+}
+
+.nav-link {
+    color: var(--text-secondary) !important;
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.5rem 0.85rem !important;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+}
+
+.nav-link:hover {
+    color: var(--text-primary) !important;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-link-highlight {
+    color: var(--accent) !important;
+    font-weight: 600;
+}
+
+.nav-link-highlight:hover {
+    color: var(--accent-hover) !important;
+    background: var(--accent-glow);
+}
+
+.btn-accent {
+    background: var(--accent);
+    color: var(--bg-primary);
+    font-weight: 600;
+    border: none;
+    transition: all 0.25s;
+}
+.btn-accent:hover {
+    background: var(--accent-hover);
+    color: var(--bg-primary);
+    box-shadow: var(--shadow-accent);
+    transform: translateY(-1px);
+}
+
+/* ── Cards ──────────────────────────────────────────────────────────────── */
+.card-premium {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.25s, box-shadow 0.25s;
+    overflow: hidden;
+}
+
+.card-premium:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.card-premium .card-header {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), transparent);
+    border-bottom: 1px solid var(--border-subtle);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 1rem 1.25rem;
+}
+
+.card-premium .card-body {
+    padding: 1.25rem;
+}
+
+/* ── Stat Cards (Admin dashboard) ──────────────────────────────────────── */
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+.stat-card .stat-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--accent);
+}
+.stat-card .stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--accent), var(--info));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.stat-card .stat-label {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 0.25rem;
+}
+
+/* ── Tables ─────────────────────────────────────────────────────────────── */
+.table-premium {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--text-primary);
+    font-size: 0.875rem;
+    margin-bottom: 0;
+}
+.table-premium thead th {
+    background: rgba(16, 185, 129, 0.06);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 0.75rem 1rem;
+    white-space: nowrap;
+}
+.table-premium tbody td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: middle;
+}
+.table-premium tbody tr {
+    transition: background 0.15s;
+}
+.table-premium tbody tr:hover {
+    background: var(--bg-card-hover);
+}
+.table-premium tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Qualify highlight (top 2) */
+.row-qualify td:first-child {
+    border-left: 3px solid var(--accent);
+}
+
+/* ── Match Cards ────────────────────────────────────────────────────────── */
+.match-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    transition: all 0.2s;
+}
+.match-card:hover {
+    background: var(--bg-card-hover);
+    box-shadow: var(--shadow-sm);
+}
+.match-card .team-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    min-width: 120px;
+}
+.match-card .team-name.home {
+    text-align: right;
+}
+.match-card .team-name.away {
+    text-align: left;
+}
+.match-card .score-display {
+    font-size: 1.5rem;
+    font-weight: 800;
+    min-width: 80px;
+    text-align: center;
+    letter-spacing: 2px;
+}
+.match-card .score-display .vs-text {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 400;
+}
+
+.badge-win {
+    background: var(--accent);
+    color: var(--bg-primary);
+}
+.badge-loss {
+    background: var(--danger);
+}
+.badge-draw {
+    background: var(--warning);
+    color: var(--bg-primary);
+}
+
+/* ── Hero Banner (Player) ──────────────────────────────────────────────── */
+.hero-banner {
+    background: linear-gradient(135deg, #10b981 0%, #0ea5e9 50%, #8b5cf6 100%);
+    border-radius: var(--radius);
+    padding: 3rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+.hero-banner::before {
+    content: '\f1e3'; /* fa-futbol */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    right: -20px;
+    top: -20px;
+    font-size: 12rem;
+    opacity: 0.08;
+    transform: rotate(15deg);
+}
+.hero-banner h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.hero-banner .hero-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.85;
+}
+
+/* ── Tournament Bracket ────────────────────────────────────────────────── */
+.bracket-round {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.5rem;
+}
+.bracket-match {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    min-width: 200px;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+.bracket-match:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-accent);
+}
+.bracket-match .bracket-team {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.35rem 0;
+}
+.bracket-match .bracket-team + .bracket-team {
+    border-top: 1px dashed var(--border-subtle);
+}
+.bracket-match .bracket-score {
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.bracket-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.5rem;
+    color: var(--text-muted);
+}
+
+/* ── Login Page ─────────────────────────────────────────────────────────── */
+.login-wrapper {
+    min-height: 75vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.login-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 420px;
+    animation: fadeInUp 0.5s ease;
+}
+.login-card .login-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--info));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 1.5rem;
+    color: #fff;
+}
+.login-card .form-control {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+}
+.login-card .form-control:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* ── Section Title ──────────────────────────────────────────────────────── */
+.section-title {
+    font-weight: 800;
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.section-title i {
+    color: var(--accent);
+}
+.section-title .badge {
+    font-size: 0.7rem;
+    vertical-align: middle;
+}
+
+/* ── Group Badge ────────────────────────────────────────────────────────── */
+.group-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--info));
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.95rem;
+}
+
+/* ── Animations ─────────────────────────────────────────────────────────── */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.5s ease both;
+}
+.fade-in-up:nth-child(1) { animation-delay: 0.05s; }
+.fade-in-up:nth-child(2) { animation-delay: 0.1s; }
+.fade-in-up:nth-child(3) { animation-delay: 0.15s; }
+.fade-in-up:nth-child(4) { animation-delay: 0.2s; }
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .table-responsive-premium {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .match-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    .match-card .team-name {
+        text-align: center !important;
+        min-width: unset;
+    }
+    .hero-banner h1 {
+        font-size: 1.75rem;
+    }
+    .bracket-grid {
+        overflow-x: auto;
+    }
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--text-muted);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}

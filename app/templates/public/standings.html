@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Classifiche — Torneo Calcio{% endblock %}
+
+{% block content %}
+<h2 class="section-title">
+    <i class="fa-solid fa-trophy"></i>Classifiche Gironi
+</h2>
+
+<div class="row g-4">
+    {% for group_name, standings in groups.items() %}
+    <div class="col-lg-6 fade-in-up">
+        <div class="card-premium">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="group-badge">{{ group_name }}</span>
+                    Girone {{ group_name }}
+                </div>
+                <a href="{{ url_for('main.group_detail', group=group_name) }}"
+                    class="btn btn-sm btn-outline-light rounded-pill px-3">
+                    <i class="fa-solid fa-arrow-right me-1"></i>Dettaglio
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive-premium">
+                    <table class="table table-premium mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Squadra</th>
+                                <th class="text-center">G</th>
+                                <th class="text-center">V</th>
+                                <th class="text-center">P</th>
+                                <th class="text-center">S</th>
+                                <th class="text-center">GF</th>
+                                <th class="text-center">GS</th>
+                                <th class="text-center">DR</th>
+                                <th class="text-center fw-700">Pt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in standings %}
+                            <tr class="{{ 'row-qualify' if loop.index <= 2 else '' }}">
+                                <td class="fw-700">{{ loop.index }}</td>
+                                <td class="fw-600">
+                                    {{ s.team.name }}
+                                    {% if loop.index <= 2 %} <i class="fa-solid fa-circle-up text-success ms-1"
+                                        style="font-size:0.7rem;" title="Qualificata"></i>
+                                        {% endif %}
+                                </td>
+                                <td class="text-center">{{ s.played }}</td>
+                                <td class="text-center text-success">{{ s.wins }}</td>
+                                <td class="text-center text-warning">{{ s.draws }}</td>
+                                <td class="text-center text-danger">{{ s.losses }}</td>
+                                <td class="text-center">{{ s.gf }}</td>
+                                <td class="text-center">{{ s.ga }}</td>
+                                <td class="text-center">
+                                    {% if s.gd > 0 %}
+                                    <span class="text-success">+{{ s.gd }}</span>
+                                    {% elif s.gd < 0 %} <span class="text-danger">{{ s.gd }}</span>
+                                        {% else %}
+                                        <span class="text-muted">0</span>
+                                        {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <span class="fw-800" style="font-size:1.05rem;">{{ s.pts }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('main.tournament') }}" class="btn btn-outline-light rounded-pill px-4">
+        <i class="fa-solid fa-sitemap me-2"></i>Vai al Tabellone Fase Finale
+    </a>
+</div>
+{% endblock %}

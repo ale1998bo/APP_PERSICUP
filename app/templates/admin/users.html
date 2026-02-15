@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block title %}Gestione Utenti — Torneo Calcio{% endblock %}
+
+{% block content %}
+<h2 class="section-title">
+    <i class="fa-solid fa-users-gear"></i>Gestione Utenti
+</h2>
+
+<div class="row g-4">
+
+    <!-- ── Crea Nuovo Utente ─────────────────────────────────────── -->
+    <div class="col-lg-5 fade-in-up">
+        <div class="card-premium">
+            <div class="card-header"><i class="fa-solid fa-user-plus me-2"></i>Crea Nuovo Utente</div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="action" value="create">
+
+                    <div class="mb-3">
+                        <label for="username" class="form-label fw-500 text-secondary"
+                            style="font-size:0.85rem;">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required
+                            placeholder="es. mario_rossi"
+                            style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label fw-500 text-secondary"
+                            style="font-size:0.85rem;">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required
+                            placeholder="Password sicura"
+                            style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="role" class="form-label fw-500 text-secondary"
+                            style="font-size:0.85rem;">Ruolo</label>
+                        <select class="form-select" id="role" name="role"
+                            onchange="document.getElementById('team-group').style.display = (this.value === 'giocatore' || this.value === 'capitano') ? 'block' : 'none';"
+                            style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
+                            <option value="giocatore">Giocatore</option>
+                            <option value="capitano">Capitano</option>
+                            <option value="organizzatore">Organizzatore</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="team-group">
+                        <label for="team_id" class="form-label fw-500 text-secondary" style="font-size:0.85rem;">Squadra
+                            (per capitano/giocatori)</label>
+                        <select class="form-select" id="team_id" name="team_id"
+                            style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
+                            <option value="">— Nessuna squadra —</option>
+                            {% for team in teams %}
+                            <option value="{{ team.id }}">{{ team.name }} (Girone {{ team.group }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-accent w-100 rounded-3 fw-600">
+                        <i class="fa-solid fa-user-plus me-2"></i>Crea Utente
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Lista Utenti ──────────────────────────────────────────── -->
+    <div class="col-lg-7 fade-in-up">
+        <div class="card-premium">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-list me-2"></i>Utenti Registrati</span>
+                <span class="badge bg-secondary rounded-pill">{{ users|length }}</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive-premium">
+                    <table class="table table-premium mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Ruolo</th>
+                                <th>Squadra</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td class="text-muted">{{ user.id }}</td>
+                                <td class="fw-600">
+                                    <i class="fa-solid fa-user me-1 text-muted"></i>{{ user.username }}
+                                </td>
+                                <td>
+                                    {% if user.role == 'admin' %}
+                                    <span class="badge bg-danger rounded-pill">Admin</span>
+                                    {% elif user.role == 'organizzatore' %}
+                                    <span class="badge bg-warning text-dark rounded-pill">Organizzatore</span>
+                                    {% elif user.role == 'capitano' %}
+                                    <span class="badge bg-primary rounded-pill">Capitano</span>
+                                    {% else %}
+                                    <span class="badge bg-info rounded-pill">Giocatore</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.team %}
+                                    {{ user.team.name }}
+                                    <small class="text-muted">({{ user.team.group }})</small>
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.username != 'admin' %}
+                                    <form method="POST" class="d-inline">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-3"
+                                            onclick="return confirm('Eliminare l\'utente {{ user.username }}?')"
+                                            title="Elimina">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <span class="text-muted" title="Non puoi eliminare l'admin"><i
+                                            class="fa-solid fa-lock"></i></span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

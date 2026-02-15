@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Girone {{ group }} — Torneo Calcio{% endblock %}
+
+{% block content %}
+
+<a href="{{ url_for('main.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill mb-3">
+    <i class="fa-solid fa-arrow-left me-1"></i>Torna alle Classifiche
+</a>
+
+<h2 class="section-title">
+    <span class="group-badge me-2" style="width:40px;height:40px;font-size:1.1rem;">{{ group }}</span>
+    Girone {{ group }}
+</h2>
+
+<!-- ── Classifica ────────────────────────────────────────────────── -->
+<div class="card-premium mb-4 fade-in-up">
+    <div class="card-header"><i class="fa-solid fa-trophy me-2"></i>Classifica</div>
+    <div class="card-body p-0">
+        <div class="table-responsive-premium">
+            <table class="table table-premium mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Squadra</th>
+                        <th class="text-center">G</th>
+                        <th class="text-center">V</th>
+                        <th class="text-center">P</th>
+                        <th class="text-center">S</th>
+                        <th class="text-center">GF</th>
+                        <th class="text-center">GS</th>
+                        <th class="text-center">DR</th>
+                        <th class="text-center fw-700">Pt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in standings %}
+                    <tr class="{{ 'row-qualify' if loop.index <= 2 else '' }}">
+                        <td class="fw-700">{{ loop.index }}</td>
+                        <td class="fw-600">
+                            {{ s.team.name }}
+                            {% if loop.index <= 2 %} <i class="fa-solid fa-circle-up text-success ms-1"
+                                style="font-size:0.7rem;" title="Qualificata"></i>
+                                {% endif %}
+                        </td>
+                        <td class="text-center">{{ s.played }}</td>
+                        <td class="text-center text-success">{{ s.wins }}</td>
+                        <td class="text-center text-warning">{{ s.draws }}</td>
+                        <td class="text-center text-danger">{{ s.losses }}</td>
+                        <td class="text-center">{{ s.gf }}</td>
+                        <td class="text-center">{{ s.ga }}</td>
+                        <td class="text-center">
+                            {% if s.gd > 0 %}<span class="text-success">+{{ s.gd }}</span>
+                            {% elif s.gd < 0 %}<span class="text-danger">{{ s.gd }}</span>
+                                {% else %}<span class="text-muted">0</span>{% endif %}
+                        </td>
+                        <td class="text-center"><span class="fw-800" style="font-size:1.05rem;">{{ s.pts }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ── Partite ───────────────────────────────────────────────────── -->
+<div class="card-premium fade-in-up">
+    <div class="card-header"><i class="fa-solid fa-calendar me-2"></i>Partite del Girone</div>
+    <div class="card-body p-0">
+        <div class="table-responsive-premium">
+            <table class="table table-premium mb-0">
+                <thead>
+                    <tr>
+                        <th>Casa</th>
+                        <th class="text-center">Risultato</th>
+                        <th>Ospite</th>
+                        <th>Stato</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for match in matches %}
+                    <tr onclick="window.location='{{ url_for('main.match_detail_public', match_id=match.id) }}';"
+                        style="cursor:pointer;" title="Clicca per dettaglio">
+                        <td class="fw-600">{{ match.home_team.name }}</td>
+                        <td class="text-center">
+                            {% if match.played %}
+                            <span class="fw-800">{{ match.home_score }} - {{ match.away_score }}</span>
+                            {% else %}
+                            <span class="text-muted">— vs —</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-600">{{ match.away_team.name }}</td>
+                        <td>
+                            {% if match.played %}
+                            <span class="badge bg-success rounded-pill"><i
+                                    class="fa-solid fa-check me-1"></i>Giocata</span>
+                            {% else %}
+                            <span class="badge bg-secondary rounded-pill">Da giocare</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
