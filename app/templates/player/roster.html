@@ -95,17 +95,15 @@
                                 <td>{{ p.nome }}</td>
                                 <td>
                                     {% if p.scadenza_visita_medica %}
-                                    {% if p.visita_scaduta %}
-                                    <span class="badge bg-danger rounded-pill">
-                                        <i class="fa-solid fa-triangle-exclamation me-1"></i>
-                                        {{ p.scadenza_visita_medica.strftime('%d/%m/%Y') }}
-                                    </span>
-                                    {% else %}
-                                    <span class="badge bg-success rounded-pill">
-                                        <i class="fa-solid fa-circle-check me-1"></i>
-                                        {{ p.scadenza_visita_medica.strftime('%d/%m/%Y') }}
-                                    </span>
-                                    {% endif %}
+                                        {% if p.scadenza_visita_medica < today %}
+                                        <span class="badge bg-danger rounded-pill">
+                                            <i class="fa-solid fa-xmark me-1"></i>{{ p.scadenza_visita_medica }}
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-success rounded-pill">
+                                            <i class="fa-solid fa-check me-1"></i>{{ p.scadenza_visita_medica }}
+                                        </span>
+                                        {% endif %}
                                     {% else %}
                                     <span class="badge bg-warning text-dark rounded-pill">
                                         <i class="fa-solid fa-question me-1"></i>Non inserita
@@ -124,7 +122,7 @@
                                 </td>
                                 <td>
                                     <form method="POST"
-                                        action="{{ url_for('player.delete_roster_player', player_id=p.id) }}"
+                                        action="{{ url_for('player.delete_roster_player', cognome=p.cognome) }}"
                                         class="d-inline">
                                         <button type="submit" class="btn btn-sm btn-outline-danger rounded-3"
                                             onclick="return confirm('Rimuovere {{ p.nome }} {{ p.cognome }} dalla rosa?')"

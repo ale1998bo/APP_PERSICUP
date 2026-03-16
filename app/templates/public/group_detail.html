@@ -70,31 +70,43 @@
             <table class="table table-premium mb-0">
                 <thead>
                     <tr>
-                        <th>Casa</th>
-                        <th class="text-center">Risultato</th>
-                        <th>Ospite</th>
-                        <th>Stato</th>
+                        <th class="text-center py-3">Partita</th>
+                        <th class="text-center py-3">Data/Ora</th>
+                        <th class="text-center py-3">Stato</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for match in matches %}
                     <tr onclick="window.location='{{ url_for('main.match_detail_public', match_id=match.id) }}';"
-                        style="cursor:pointer;" title="Clicca per dettaglio">
-                        <td class="fw-600">{{ match.home_team.name }}</td>
+                        style="cursor:pointer;" title="Clicca per dettaglio" class="align-middle">
                         <td class="text-center">
-                            {% if match.played %}
-                            <span class="fw-800">{{ match.home_score }} - {{ match.away_score }}</span>
+                            <div class="d-flex justify-content-center align-items-center">
+                                <span class="badge shadow-sm" style="background:var(--bg-tertiary); color:var(--text-primary); border: 1px solid var(--border-subtle); font-size: 0.9rem; min-width: 140px; padding: 10px;">{{ match.home_team.name }}</span>
+                                <span class="fw-800 mx-3" style="font-size: 1.2rem; min-width: 60px;">
+                                    {% if match.played %}
+                                    <span class="text-accent">{{ match.home_score }} - {{ match.away_score }}</span>
+                                    {% else %}
+                                    <span class="text-muted fs-6" style="opacity:0.5;">VS</span>
+                                    {% endif %}
+                                </span>
+                                <span class="badge shadow-sm" style="background:var(--bg-tertiary); color:var(--text-primary); border: 1px solid var(--border-subtle); font-size: 0.9rem; min-width: 140px; padding: 10px;">{{ match.away_team.name }}</span>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            {% if match.match_date or match.match_time %}
+                                <div class="small fw-500 text-secondary" style="line-height:1.5;">
+                                    {% if match.match_date %}<i class="fa-regular fa-calendar me-1"></i>{{ match.match_date }}<br>{% endif %}
+                                    {% if match.match_time %}<i class="fa-regular fa-clock me-1"></i>{{ match.match_time }}{% endif %}
+                                </div>
                             {% else %}
-                            <span class="text-muted">— vs —</span>
+                                <span class="text-muted small">—</span>
                             {% endif %}
                         </td>
-                        <td class="fw-600">{{ match.away_team.name }}</td>
-                        <td>
+                        <td class="text-center">
                             {% if match.played %}
-                            <span class="badge bg-success rounded-pill"><i
-                                    class="fa-solid fa-check me-1"></i>Giocata</span>
+                            <span class="badge bg-success rounded-pill px-3 py-2"><i class="fa-solid fa-check me-1"></i>Giocata</span>
                             {% else %}
-                            <span class="badge bg-secondary rounded-pill">Da giocare</span>
+                            <span class="badge bg-secondary rounded-pill px-3 py-2">Da giocare</span>
                             {% endif %}
                         </td>
                     </tr>

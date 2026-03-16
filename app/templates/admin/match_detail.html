@@ -112,6 +112,32 @@
     <!-- ── Azioni ────────────────────────────────────────────────── -->
     <div class="col-lg-5 fade-in-up">
 
+        <!-- Programmazione Partita -->
+        <div class="card-premium mb-3">
+            <div class="card-header"><i class="fa-regular fa-calendar-days me-2"></i>Programmazione Partita</div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="action" value="set_datetime">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-500 text-secondary" style="font-size:0.85rem;">Data della Partita</label>
+                        <input type="date" class="form-control" name="match_date" value="{{ match.match_date or '' }}"
+                            style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-500 text-secondary" style="font-size:0.85rem;">Orario</label>
+                        <input type="time" class="form-control" name="match_time" value="{{ match.match_time or '' }}"
+                            style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
+                    </div>
+
+                    <button type="submit" class="btn btn-outline-accent w-100 rounded-3 fw-600">
+                        <i class="fa-solid fa-save me-2"></i>Salva Programmazione
+                    </button>
+                </form>
+            </div>
+        </div>
+
         <!-- Aggiungi Gol -->
         <div class="card-premium mb-3">
             <div class="card-header"><i class="fa-solid fa-plus me-2"></i>Aggiungi Gol</div>

@@ -1,7 +1,7 @@
 import os
 from flask import Flask, send_from_directory
 from config import config_by_name
-from app.extensions import db, login_manager
+from app.extensions import init_firebase, login_manager
 
 
 def create_app(config_name='dev'):
@@ -13,7 +13,7 @@ def create_app(config_name='dev'):
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
     # ── Extensions ──────────────────────────────────────────────
-    db.init_app(app)
+    init_firebase(app)
     login_manager.init_app(app)
 
     # ── Blueprints ──────────────────────────────────────────────
@@ -32,10 +32,8 @@ def create_app(config_name='dev'):
     def uploaded_file(filename):
         return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-    # ── Database ────────────────────────────────────────────────
     with app.app_context():
         from app import models  # noqa: F401 – ensure models are registered
-        db.create_all()
 
     return app
 

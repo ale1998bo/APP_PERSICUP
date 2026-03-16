@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it" data-bs-theme="dark">
+<html lang="it" data-bs-theme="light">
 
 <head>
     <meta charset="UTF-8">
@@ -12,7 +12,8 @@
     <!-- FontAwesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
@@ -23,9 +24,10 @@
     <!-- ═══ Navbar ═══════════════════════════════════════════════════════════ -->
     <nav class="navbar navbar-expand-lg sticky-top navbar-premium" id="main-navbar">
         <div class="container">
-            <a class="navbar-brand fw-800 d-flex align-items-center gap-2" href="{{ url_for('main.index') }}">
-                <i class="fa-solid fa-futbol fa-spin-pulse"></i>
-                <span>Torneo Calcio</span>
+            <a class="navbar-brand fw-800 d-flex align-items-center gap-2 position-relative" href="{{ url_for('main.index') }}">
+                <i class="fa-solid fa-futbol"></i>
+                <span style="font-size: 1.8rem; letter-spacing: 2px;">PERSICUP</span>
+                <span class="badge bg-warning text-white position-absolute" style="font-family: 'Silkscreen', monospace; font-size: 0.7rem; bottom: -8px; right: 0px; transform: rotate(-8deg); border: 1px solid #fff; border-radius: 0;">2026</span>
             </a>
 
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
@@ -61,12 +63,12 @@
                             <i class="fa-solid fa-pen-to-square me-1"></i>Risultati
                         </a>
                     </li>
-                    {% if current_user.role == 'admin' %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin.admin_roster') }}">
-                            <i class="fa-solid fa-clipboard-list me-1"></i>Rose
+                            <i class="fa-solid fa-clipboard-list me-1"></i>Rose e Squadre
                         </a>
                     </li>
+                    {% if current_user.role == 'admin' %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin.user_management') }}">
                             <i class="fa-solid fa-users-gear me-1"></i>Utenti
@@ -84,13 +86,13 @@
                     {% endif %}
 
                     <li class="nav-item ms-lg-2">
-                        <a class="btn btn-sm btn-outline-light rounded-pill px-3" href="{{ url_for('auth.logout') }}">
+                        <a class="btn btn-sm btn-outline-light px-3" style="border-radius: 0; font-family: 'Silkscreen', monospace;" href="{{ url_for('auth.logout') }}">
                             <i class="fa-solid fa-right-from-bracket me-1"></i>Logout
                         </a>
                     </li>
                     {% else %}
                     <li class="nav-item ms-lg-2">
-                        <a class="btn btn-sm btn-accent rounded-pill px-3" href="{{ url_for('auth.login') }}">
+                        <a class="btn btn-sm btn-accent px-3 py-2" href="{{ url_for('auth.login') }}">
                             <i class="fa-solid fa-right-to-bracket me-1"></i>Login
                         </a>
                     </li>
@@ -120,10 +122,12 @@
     </main>
 
     <!-- ═══ Footer ══════════════════════════════════════════════════════════ -->
-    <footer class="text-center py-4 mt-5 border-top border-secondary border-opacity-25">
-        <small class="text-secondary">
-            <i class="fa-solid fa-futbol me-1"></i>Torneo Calcio Manager &copy; 2026 — Built with Flask
+    <footer class="text-center py-4 mt-5 border-top border-secondary border-opacity-25" style="background: var(--bg-card);">
+        <small class="text-secondary fw-600">
+            <i class="fa-solid fa-futbol text-accent me-1"></i>
+            PERSICUP &copy; 2026 — Torneo di Calcio a 7
         </small>
+        <div class="mt-1 small text-muted">S. Giovanni in Persiceto</div>
     </footer>
 
     <!-- Bootstrap JS -->

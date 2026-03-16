@@ -3,15 +3,13 @@ import uuid
 from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
 from app.extensions import db
-from app.models import RosterPlayer
+from app.models import Team
 from app.blueprints.auth.routes import role_required
 
 player_bp = Blueprint('player', __name__, url_prefix='/player')
 
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'}
-
 
 def _allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -22,9 +20,14 @@ def _allowed_file(filename):
 @role_required('capitano')
 def roster():
     """Captain's roster management — add/view players with medical certificates."""
-    team = current_user.team
-    if not team:
+    team_id = current_user.team_id
+    if not team_id:
         flash('Il tuo account non e associato a nessuna squadra.', 'danger')
+        return redirect(url_for('main.index'))
+        
+    team = Team.get_by_id(team_id)
+    if not team:
+        flash('Squadra associata inesistente.', 'danger')
         return redirect(url_for('main.index'))
 
     if request.method == 'POST':
@@ -40,7 +43,7 @@ def roster():
         scadenza = None
         if scadenza_str:
             try:
-                scadenza = datetime.strptime(scadenza_str, '%Y-%m-%d').date()
+                scadenza = datetime.strptime(scadenza_str, '%Y-%m-%d').date().isoformat()
             except ValueError:
                 flash('Data non valida.', 'danger')
                 return redirect(url_for('player.roster'))
@@ -55,43 +58,57 @@ def roster():
             file.save(filepath)
             filename_saved = unique_name
 
-        player = RosterPlayer(
-            team_id=team.id,
-            nome=nome,
-            cognome=cognome,
-            scadenza_visita_medica=scadenza,
-            file_visita_medica=filename_saved,
-        )
-        db.session.add(player)
-        db.session.commit()
+        player_data = {
+            'nome': nome,
+            'cognome': cognome,
+            'scadenza_visita_medica': scadenza,
+            'file_visita_medica': filename_saved,
+        }
+        Team.add_player_to_roster(team_id, player_data)
         flash(f'Giocatore {nome} {cognome} aggiunto alla rosa.', 'success')
         return redirect(url_for('player.roster'))
 
     # GET
-    roster_players = RosterPlayer.query.filter_by(team_id=team.id).order_by(RosterPlayer.cognome).all()
-    return render_template('player/roster.html', team=team, roster_players=roster_players)
+    roster_players = team.get('roster', [])
+    # Re-sort for display (equivalent to order_by(cognome))
+    roster_players.sort(key=lambda p: p.get('cognome', '').lower())
+    from datetime import datetime as dt
+    today = dt.today().date().isoformat()
+    return render_template('player/roster.html', team=team, roster_players=roster_players, today=today)
 
 
 # ── Delete Roster Player ───────────────────────────────────────────────────
-@player_bp.route('/roster/delete/<int:player_id>', methods=['POST'])
+@player_bp.route('/roster/delete/<cognome>', methods=['POST'])
 @role_required('capitano')
-def delete_roster_player(player_id):
-    """Remove a player from the roster."""
-    team = current_user.team
-    player = db.session.get(RosterPlayer, player_id)
-
-    if not player or player.team_id != team.id:
-        flash('Giocatore non trovato.', 'danger')
+def delete_roster_player(cognome):
+    """Remove a player from the roster array."""
+    team_id = current_user.team_id
+    if not team_id:
         return redirect(url_for('player.roster'))
 
-    # Delete uploaded file if exists
-    if player.file_visita_medica:
-        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], player.file_visita_medica)
-        if os.path.exists(filepath):
-            os.remove(filepath)
+    team = Team.get_by_id(team_id)
+    if not team:
+        flash('Squadra non trovata.', 'danger')
+        return redirect(url_for('player.roster'))
 
-    name = f"{player.nome} {player.cognome}"
-    db.session.delete(player)
-    db.session.commit()
-    flash(f'Giocatore {name} rimosso dalla rosa.', 'success')
+    new_roster = []
+    found = False
+    
+    for p in team.get('roster', []):
+        if p.get('cognome') == cognome and not found:
+            found = True
+            # Delete uploaded file if exists
+            if p.get('file_visita_medica'):
+                filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], p['file_visita_medica'])
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+            continue
+        new_roster.append(p)
+
+    if found:
+        db.collection(Team.collection_name).document(team_id).update({'roster': new_roster})
+        flash(f'Giocatore rimosso dalla rosa.', 'success')
+    else:
+        flash(f'Giocatore non trovato nella rosa.', 'danger')
+        
     return redirect(url_for('player.roster'))

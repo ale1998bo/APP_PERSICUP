@@ -10,25 +10,51 @@
 
     <!-- ── Team Selector ─────────────────────────────────────────── -->
     <div class="col-lg-4 fade-in-up">
+        <!-- Add Team Form -->
+        <div class="card-premium mb-3">
+            <div class="card-header"><i class="fa-solid fa-plus me-2"></i>Nuova Squadra</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.admin_roster') }}">
+                    <input type="hidden" name="action" value="create_team">
+                    <div class="d-flex gap-2">
+                        <input type="text" class="form-control form-control-sm" name="name" required placeholder="Nome Squadra"
+                               style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary); width: 100%;">
+                        <button type="submit" class="btn btn-sm btn-accent"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div class="card-premium">
             <div class="card-header"><i class="fa-solid fa-shield-halved me-2"></i>Squadre</div>
             <div class="card-body p-0">
                 <div class="list-group list-group-flush" style="background:transparent;">
                     {% for team in teams %}
-                    <a href="{{ url_for('admin.admin_roster', team_id=team.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
-                              {{ 'active' if selected_team and selected_team.id == team.id else '' }}"
-                        style="background:{{ 'var(--accent-primary)' if selected_team and selected_team.id == team.id else 'transparent' }};
-                              border-color:var(--border-subtle); color:{{ 'white' if selected_team and selected_team.id == team.id else 'var(--text-primary)' }};">
-                        <span>
-                            <span class="group-badge me-2" style="width:28px;height:28px;font-size:0.7rem;">{{
-                                team.group }}</span>
+                    <div class="list-group-item d-flex justify-content-between align-items-center {{ 'active' if selected_team and selected_team.id == team.id else '' }}"
+                         style="background:{{ 'var(--accent-primary)' if selected_team and selected_team.id == team.id else 'transparent' }};
+                               border-color:var(--border-subtle); color:{{ 'white' if selected_team and selected_team.id == team.id else 'var(--text-primary)' }};">
+                        
+                        <a href="{{ url_for('admin.admin_roster', team_id=team.id) }}" class="text-decoration-none text-inherit d-flex align-items-center flex-grow-1" style="color: inherit;">
+                            <span class="group-badge me-2" style="width:28px;height:28px;font-size:0.7rem; {{ '' if team.group else 'background: var(--bg-tertiary);' }}">
+                                {{ team.group if team.group else '?' }}
+                            </span>
                             {{ team.name }}
-                        </span>
-                        <span class="badge bg-secondary rounded-pill">
-                            {{ team.roster.count() }}
-                        </span>
-                    </a>
+                        </a>
+                        
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-secondary rounded-pill">{{ team.roster|length if team.roster else 0 }}</span>
+                            <!-- Delete Team Button -->
+                            <form method="POST" action="{{ url_for('admin.admin_roster') }}" class="m-0 p-0" onsubmit="return confirm('Eliminare la squadra {{ team.name }}?');">
+                                <input type="hidden" name="action" value="delete_team">
+                                <input type="hidden" name="team_id" value="{{ team.id }}">
+                                <button type="submit" class="btn btn-sm btn-link text-danger p-0 m-0"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </div>
+                    </div>
                     {% endfor %}
+                    {% if not teams %}
+                    <div class="p-3 text-center text-muted">Nessuna squadra presente</div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -38,11 +64,38 @@
     <div class="col-lg-8 fade-in-up">
         {% if selected_team %}
 
-        <!-- Add Player Form -->
-        <div class="card-premium mb-3">
-            <div class="card-header">
-                <i class="fa-solid fa-user-plus me-2"></i>Aggiungi Giocatore — {{ selected_team.name }}
+        <div class="row g-3 mb-3">
+            <!-- Assegna Girone Form -->
+            <div class="col-md-4">
+                <div class="card-premium h-100">
+                    <div class="card-header"><i class="fa-solid fa-layer-group me-2"></i>Assegna Girone</div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('admin.admin_roster') }}">
+                            <input type="hidden" name="action" value="set_group">
+                            <input type="hidden" name="team_id" value="{{ selected_team.id }}">
+                            <div class="d-flex gap-2 mb-2">
+                                <select class="form-select form-select-sm" name="group" required
+                                    style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
+                                    <option value="" disabled {% if not selected_team.group %}selected{% endif %}>Seleziona Girone</option>
+                                    <option value="A" {% if selected_team.group == 'A' %}selected{% endif %}>Girone A</option>
+                                    <option value="B" {% if selected_team.group == 'B' %}selected{% endif %}>Girone B</option>
+                                    <option value="C" {% if selected_team.group == 'C' %}selected{% endif %}>Girone C</option>
+                                    <option value="D" {% if selected_team.group == 'D' %}selected{% endif %}>Girone D</option>
+                                    <option value="Playoff" {% if selected_team.group == 'Playoff' %}selected{% endif %}>Oltre Gironi</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-outline-accent w-100">Aggiorna Girone</button>
+                        </form>
+                    </div>
+                </div>
             </div>
+
+            <!-- Add Player Form -->
+            <div class="col-md-8">
+                <div class="card-premium h-100">
+                    <div class="card-header">
+                        <i class="fa-solid fa-user-plus me-2"></i>Aggiungi Giocatore
+                    </div>
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data">
                     <div class="row g-2">
@@ -69,6 +122,8 @@
                     </button>
                 </form>
             </div>
+        </div>
+        </div>
         </div>
 
         <!-- Roster Table -->
@@ -107,15 +162,15 @@
                                 </td>
                                 <td>
                                     {% if p.scadenza_visita_medica %}
-                                    {% if p.visita_scaduta %}
+                                    {% if p.scadenza_visita_medica and p.scadenza_visita_medica < today %}
                                     <span class="badge bg-danger rounded-pill">
                                         <i class="fa-solid fa-xmark me-1"></i>{{
-                                        p.scadenza_visita_medica.strftime('%d/%m/%Y') }}
+                                        p.scadenza_visita_medica }}
                                     </span>
                                     {% else %}
                                     <span class="badge bg-success rounded-pill">
                                         <i class="fa-solid fa-check me-1"></i>{{
-                                        p.scadenza_visita_medica.strftime('%d/%m/%Y') }}
+                                        p.scadenza_visita_medica }}
                                     </span>
                                     {% endif %}
                                     {% else %}
@@ -124,7 +179,7 @@
                                 </td>
                                 <td>
                                     <form method="POST"
-                                        action="{{ url_for('admin.admin_roster_delete', player_id=p.id) }}"
+                                        action="{{ url_for('admin.admin_roster_delete', team_id=selected_team.id, cognome=p.cognome) }}"
                                         class="d-inline">
                                         <button type="submit" class="btn btn-sm btn-outline-danger rounded-3 py-0"
                                             onclick="return confirm('Rimuovere {{ p.nome }} {{ p.cognome }}?')">

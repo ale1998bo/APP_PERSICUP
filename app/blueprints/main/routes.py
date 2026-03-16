@@ -1,8 +1,7 @@
-from flask import Blueprint, render_template
-from app.models import Team, Match, Goal
+from flask import Blueprint, render_template, abort
+from app.models import Team, Match
 
 main_bp = Blueprint('main', __name__)
-
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  STANDINGS CALCULATION — Punti > H2H > Diff. Reti > Goal Fatti
@@ -17,13 +16,14 @@ def get_standings(group):
       4. Goals Scored
     Returns a list of dicts sorted best→worst.
     """
-    teams = Team.query.filter_by(group=group).all()
-    matches = Match.query.filter_by(group=group, phase='group', played=True).all()
+    teams = Team.get_by_group(group)
+    all_matches_in_group = Match.get_by_group(group)
+    matches = [m for m in all_matches_in_group if m.get('phase') == 'group' and m.get('played')]
 
     # ── Build raw stats ──────────────────────────────────────────────
     stats = {}
     for t in teams:
-        stats[t.id] = {
+        stats[t['id']] = {
             'team': t,
             'played': 0,
             'wins': 0,
@@ -36,21 +36,23 @@ def get_standings(group):
         }
 
     for m in matches:
-        h = stats[m.home_team_id]
-        a = stats[m.away_team_id]
+        h = stats.get(m['home_team_id'])
+        a = stats.get(m['away_team_id'])
+        
+        if not h or not a: continue
 
         h['played'] += 1
         a['played'] += 1
-        h['gf'] += m.home_score
-        h['ga'] += m.away_score
-        a['gf'] += m.away_score
-        a['ga'] += m.home_score
+        h['gf'] += m.get('home_score', 0)
+        h['ga'] += m.get('away_score', 0)
+        a['gf'] += m.get('away_score', 0)
+        a['ga'] += m.get('home_score', 0)
 
-        if m.home_score > m.away_score:
+        if m.get('home_score', 0) > m.get('away_score', 0):
             h['wins'] += 1
             h['pts'] += 3
             a['losses'] += 1
-        elif m.home_score < m.away_score:
+        elif m.get('home_score', 0) < m.get('away_score', 0):
             a['wins'] += 1
             a['pts'] += 3
             h['losses'] += 1
@@ -107,29 +109,29 @@ def _resolve_h2h(tied_teams, all_matches):
       3. Overall goal difference
       4. Overall goals scored
     """
-    tied_ids = {t['team'].id for t in tied_teams}
+    tied_ids = {t['team']['id'] for t in tied_teams}
 
     # Build H2H stats
     h2h = {tid: {'pts': 0, 'gd': 0} for tid in tied_ids}
 
     for m in all_matches:
-        if m.home_team_id in tied_ids and m.away_team_id in tied_ids:
-            if m.home_score > m.away_score:
-                h2h[m.home_team_id]['pts'] += 3
-            elif m.home_score < m.away_score:
-                h2h[m.away_team_id]['pts'] += 3
+        if m['home_team_id'] in tied_ids and m['away_team_id'] in tied_ids:
+            if m.get('home_score', 0) > m.get('away_score', 0):
+                h2h[m['home_team_id']]['pts'] += 3
+            elif m.get('home_score', 0) < m.get('away_score', 0):
+                h2h[m['away_team_id']]['pts'] += 3
             else:
-                h2h[m.home_team_id]['pts'] += 1
-                h2h[m.away_team_id]['pts'] += 1
+                h2h[m['home_team_id']]['pts'] += 1
+                h2h[m['away_team_id']]['pts'] += 1
 
-            h2h[m.home_team_id]['gd'] += m.home_score - m.away_score
-            h2h[m.away_team_id]['gd'] += m.away_score - m.home_score
+            h2h[m['home_team_id']]['gd'] += m.get('home_score', 0) - m.get('away_score', 0)
+            h2h[m['away_team_id']]['gd'] += m.get('away_score', 0) - m.get('home_score', 0)
 
     # Sort tied teams by H2H pts → H2H gd → overall gd → overall gf
     tied_teams.sort(
         key=lambda s: (
-            h2h[s['team'].id]['pts'],
-            h2h[s['team'].id]['gd'],
+            h2h[s['team']['id']]['pts'],
+            h2h[s['team']['id']]['gd'],
             s['gd'],
             s['gf'],
         ),
@@ -155,15 +157,35 @@ def index():
 @main_bp.route('/tournament')
 def tournament():
     """Knockout stage bracket."""
-    quarters = Match.query.filter_by(phase='quarter').order_by(Match.id).all()
-    semis = Match.query.filter_by(phase='semi').order_by(Match.id).all()
-    final = Match.query.filter_by(phase='final').first()
+    matches = Match.get_all()
+    
+    quarters = sorted([m for m in matches if m.get('phase') == 'Quarti'], key=lambda x: x.get('match_date') or x['id'])
+    semis = sorted([m for m in matches if m.get('phase') == 'Semifinale'], key=lambda x: x.get('match_date') or x['id'])
+    finals = [m for m in matches if m.get('phase') == 'Finale']
+    finalinas = [m for m in matches if m.get('phase') == 'Finalina']
+    
+    final = finals[0] if finals else None
+    finalina = finalinas[0] if finalinas else None
+
+    # Attach teams per frontend rendering
+    def attach_teams(m_list):
+        for m in m_list:
+            if m:
+                m['home_team'] = Team.get_by_id(m['home_team_id']) or {"name": "Sconosciuto"}
+                m['away_team'] = Team.get_by_id(m['away_team_id']) or {"name": "Sconosciuto"}
+        return m_list
+
+    quarters = attach_teams(quarters)
+    semis = attach_teams(semis)
+    final = attach_teams([final])[0] if final else None
+    finalina = attach_teams([finalina])[0] if finalina else None
 
     return render_template(
         'public/tournament_tree.html',
         quarters=quarters,
         semis=semis,
         final=final,
+        finalina=finalina,
     )
 
 
@@ -174,8 +196,12 @@ def group_detail(group):
         return render_template('public/standings.html', groups={}), 404
 
     standings = get_standings(group)
-    matches = Match.query.filter_by(group=group, phase='group')\
-                   .order_by(Match.id).all()
+    matches_raw = Match.get_by_group(group)
+    matches = sorted([m for m in matches_raw if m.get('phase') == 'group'], key=lambda x: x['id'])
+    
+    for m in matches:
+        m['home_team'] = Team.get_by_id(m['home_team_id']) or {"name": "Sconosciuto"}
+        m['away_team'] = Team.get_by_id(m['away_team_id']) or {"name": "Sconosciuto"}
 
     return render_template(
         'public/group_detail.html',
@@ -185,15 +211,22 @@ def group_detail(group):
     )
 
 
-@main_bp.route('/match/<int:match_id>')
+@main_bp.route('/match/<match_id>')
 def match_detail_public(match_id):
     """Public match detail — scorers + MVP."""
-    match = Match.query.get_or_404(match_id)
+    match = Match.get_by_id(match_id)
+    if not match:
+        abort(404)
+        
+    home_team = Team.get_by_id(match['home_team_id']) or {"name": "Sconosciuto", "id": match['home_team_id']}
+    away_team = Team.get_by_id(match['away_team_id']) or {"name": "Sconosciuto", "id": match['away_team_id']}
+    match['home_team'] = home_team
+    match['away_team'] = away_team
 
-    home_goals = Goal.query.filter_by(match_id=match.id, team_id=match.home_team_id)\
-                     .order_by(Goal.minute).all()
-    away_goals = Goal.query.filter_by(match_id=match.id, team_id=match.away_team_id)\
-                     .order_by(Goal.minute).all()
+    home_goals = sorted([g for g in match.get('goals', []) if g['team_id'] == match['home_team_id']], 
+                        key=lambda x: (x.get('minute') or 999))
+    away_goals = sorted([g for g in match.get('goals', []) if g['team_id'] == match['away_team_id']], 
+                        key=lambda x: (x.get('minute') or 999))
 
     return render_template(
         'public/match_detail.html',

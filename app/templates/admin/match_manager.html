@@ -6,6 +6,14 @@
     <i class="fa-solid fa-pen-to-square"></i>Match Manager
 </h2>
 
+<div class="mb-4 fade-in-up text-end">
+    <form action="{{ url_for('admin.generate_group_matches') }}" method="POST" class="d-inline">
+        <button type="submit" class="btn btn-accent rounded-pill px-4 shadow-sm" onclick="return confirm('Vuoi generare automaticamente le 6 partite per i gironi?\n\nAttenzione: Vengono elaborate solo le squadre di gironi completi (esattamente 4 squadre presenti). Se esistono già delle partite in un girone verranno ignorate per impedire duplicati.')">
+            <i class="fa-solid fa-magic me-2"></i>Genera Partite Gironi
+        </button>
+    </form>
+</div>
+
 <!-- ── Group Matches ─────────────────────────────────────────────────── -->
 {% if group_matches %}
 <div class="card-premium mb-4 fade-in-up">
@@ -15,28 +23,41 @@
             <table class="table table-premium mb-0">
                 <thead>
                     <tr>
-                        <th>Girone</th>
-                        <th>Casa</th>
-                        <th class="text-center">Risultato</th>
-                        <th>Ospite</th>
-                        <th>Stato</th>
+                        <th class="text-center py-3">Girone</th>
+                        <th class="text-center py-3">Partita</th>
+                        <th class="text-center py-3">Data/Ora</th>
+                        <th class="text-center py-3">Stato</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for match in group_matches %}
-                    <tr class="cursor-pointer"
+                    <tr class="align-middle cursor-pointer"
                         onclick="window.location='{{ url_for('admin.match_detail', match_id=match.id) }}';"
                         style="cursor:pointer;" title="Clicca per dettaglio">
-                        <td><span class="group-badge">{{ match.group }}</span></td>
-                        <td class="fw-600">{{ match.home_team.name }}</td>
+                        <td class="text-center"><span class="group-badge">{{ match.group }}</span></td>
                         <td class="text-center">
-                            {% if match.played %}
-                            <span class="fw-800">{{ match.home_score }} - {{ match.away_score }}</span>
+                            <div class="d-flex justify-content-center align-items-center">
+                                <span class="badge shadow-sm" style="background:var(--bg-tertiary); color:var(--text-primary); border: 1px solid var(--border-subtle); font-size: 0.9rem; min-width: 140px; padding: 10px;">{{ match.home_team.name }}</span>
+                                <span class="fw-800 mx-3" style="font-size: 1.2rem; min-width: 60px;">
+                                    {% if match.played %}
+                                    <span class="text-accent">{{ match.home_score }} - {{ match.away_score }}</span>
+                                    {% else %}
+                                    <span class="text-muted fs-6" style="opacity:0.5;">VS</span>
+                                    {% endif %}
+                                </span>
+                                <span class="badge shadow-sm" style="background:var(--bg-tertiary); color:var(--text-primary); border: 1px solid var(--border-subtle); font-size: 0.9rem; min-width: 140px; padding: 10px;">{{ match.away_team.name }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if match.match_date or match.match_time %}
+                                <div class="small fw-500 text-secondary">
+                                    {% if match.match_date %}<i class="fa-regular fa-calendar me-1"></i>{{ match.match_date }}<br>{% endif %}
+                                    {% if match.match_time %}<i class="fa-regular fa-clock me-1"></i>{{ match.match_time }}{% endif %}
+                                </div>
                             {% else %}
-                            <span class="text-muted">— vs —</span>
+                                <span class="text-muted small">—</span>
                             {% endif %}
                         </td>
-                        <td class="fw-600">{{ match.away_team.name }}</td>
                         <td>
                             {% if match.played %}
                             <span class="badge bg-success rounded-pill"><i
@@ -54,6 +75,55 @@
 </div>
 {% endif %}
 
+<!-- ── Manual Match Creation ───────────────────────────────────────────── -->
+<div class="card-premium mb-4 fade-in-up">
+    <div class="card-header bg-warning text-dark"><i class="fa-solid fa-plus-circle me-2"></i>Aggiungi Partita Extra-Girone</div>
+    <div class="card-body">
+        <form action="{{ url_for('admin.create_playoff') }}" method="POST">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">Squadra Casa</label>
+                    <select class="form-select" name="home_team_id" required>
+                        <option value="">-- Seleziona --</option>
+                        {% for t in teams %}
+                        <option value="{{ t.id }}">{{ t.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">Squadra Ospite</label>
+                    <select class="form-select" name="away_team_id" required>
+                        <option value="">-- Seleziona --</option>
+                        {% for t in teams %}
+                        <option value="{{ t.id }}">{{ t.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted">Fase / Turno</label>
+                    <select class="form-select" name="phase" required>
+                        <option value="Quarti">Quarti di Finale</option>
+                        <option value="Semifinale">Semifinale</option>
+                        <option value="Finale">Finale 1°/2°</option>
+                        <option value="Finalina">Finale 3°/4°</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted">Data</label>
+                    <input type="date" class="form-control" name="match_date">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted">Ora</label>
+                    <input type="time" class="form-control" name="match_time">
+                </div>
+                <div class="col-12 mt-3 text-end">
+                    <button type="submit" class="btn btn-accent px-4"><i class="fa-solid fa-check me-2"></i>Crea Partita</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- ── Playoff Matches ───────────────────────────────────────────────── -->
 {% if playoff_matches %}
 <div class="card-premium fade-in-up">
@@ -63,31 +133,45 @@
             <table class="table table-premium mb-0">
                 <thead>
                     <tr>
-                        <th>Fase</th>
-                        <th>Casa</th>
-                        <th class="text-center">Risultato</th>
-                        <th>Ospite</th>
-                        <th>Stato</th>
+                        <th class="text-center py-3">Fase</th>
+                        <th class="text-center py-3">Partita</th>
+                        <th class="text-center py-3">Data/Ora</th>
+                        <th class="text-center py-3">Stato</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for match in playoff_matches %}
-                    <tr onclick="window.location='{{ url_for('admin.match_detail', match_id=match.id) }}';"
+                    <tr class="align-middle cursor-pointer"
+                        onclick="window.location='{{ url_for('admin.match_detail', match_id=match.id) }}';"
                         style="cursor:pointer;" title="Clicca per dettaglio">
-                        <td>
+                        <td class="text-center">
                             <span class="badge bg-warning text-dark rounded-pill">
                                 {{ match.phase | upper }}
                             </span>
                         </td>
-                        <td class="fw-600">{{ match.home_team.name }}</td>
                         <td class="text-center">
-                            {% if match.played %}
-                            <span class="fw-800">{{ match.home_score }} - {{ match.away_score }}</span>
+                            <div class="d-flex justify-content-center align-items-center">
+                                <span class="badge shadow-sm" style="background:var(--bg-tertiary); color:var(--text-primary); border: 1px solid var(--border-subtle); font-size: 0.9rem; min-width: 140px; padding: 10px;">{{ match.home_team.name }}</span>
+                                <span class="fw-800 mx-3" style="font-size: 1.2rem; min-width: 60px;">
+                                    {% if match.played %}
+                                    <span class="text-accent">{{ match.home_score }} - {{ match.away_score }}</span>
+                                    {% else %}
+                                    <span class="text-muted fs-6" style="opacity:0.5;">VS</span>
+                                    {% endif %}
+                                </span>
+                                <span class="badge shadow-sm" style="background:var(--bg-tertiary); color:var(--text-primary); border: 1px solid var(--border-subtle); font-size: 0.9rem; min-width: 140px; padding: 10px;">{{ match.away_team.name }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if match.match_date or match.match_time %}
+                                <div class="small fw-500 text-secondary">
+                                    {% if match.match_date %}<i class="fa-regular fa-calendar me-1"></i>{{ match.match_date }}<br>{% endif %}
+                                    {% if match.match_time %}<i class="fa-regular fa-clock me-1"></i>{{ match.match_time }}{% endif %}
+                                </div>
                             {% else %}
-                            <span class="text-muted">— vs —</span>
+                                <span class="text-muted small">—</span>
                             {% endif %}
                         </td>
-                        <td class="fw-600">{{ match.away_team.name }}</td>
                         <td>
                             {% if match.played %}
                             <span class="badge bg-success rounded-pill"><i

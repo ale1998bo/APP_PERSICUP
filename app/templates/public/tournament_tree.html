@@ -104,6 +104,29 @@
                 <i class="fa-solid fa-trophy text-warning me-1"></i> In attesa
             </div>
             {% endif %}
+
+            <h6 class="text-center text-secondary text-uppercase fw-700 mt-5 mb-3"
+                style="font-size:0.75rem; letter-spacing:2px;">
+                Finale 3°/4° Posto
+            </h6>
+            {% if finalina %}
+            <div class="bracket-match">
+                <div
+                    class="bracket-team {{ 'fw-700' if finalina.played and finalina.home_score > finalina.away_score else '' }}">
+                    <span>{{ finalina.home_team.name }}</span>
+                    <span class="bracket-score">{{ finalina.home_score if finalina.played else '' }}</span>
+                </div>
+                <div
+                    class="bracket-team {{ 'fw-700' if finalina.played and finalina.away_score > finalina.home_score else '' }}">
+                    <span>{{ finalina.away_team.name }}</span>
+                    <span class="bracket-score">{{ finalina.away_score if finalina.played else '' }}</span>
+                </div>
+            </div>
+            {% else %}
+            <div class="bracket-match text-center text-muted py-3">
+                <i class="fa-solid fa-medal text-secondary me-1"></i> In attesa
+            </div>
+            {% endif %}
         </div>
 
     </div>

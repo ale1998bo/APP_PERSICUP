@@ -1,33 +1,39 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   TORNEO CALCIO — Premium Dark Theme
+   TORNEO CALCIO — Persicup Retro Theme (Light / 8-Bit)
    ═══════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap');
 
 :root {
     /* ── Palette ───────────────────────────────────────────── */
-    --bg-primary:     #0b0e14;
-    --bg-secondary:   #111827;
-    --bg-card:        #1a1f2e;
-    --bg-card-hover:  #232a3d;
-    --border-subtle:  rgba(255, 255, 255, 0.06);
+    --bg-primary:     #EBEBEB;   /* Grigio chiaro estivo */
+    --bg-secondary:   #F5F5F5;
+    --bg-tertiary:    #ffffff;
+    --bg-card:        #ffffff;
+    --bg-card-hover:  #fafafa;
+    --border-subtle:  #cccccc;
 
-    --accent:         #10b981;   /* Emerald Green */
-    --accent-glow:    rgba(16, 185, 129, 0.25);
-    --accent-hover:   #34d399;
-    --danger:         #ef4444;
-    --warning:        #f59e0b;
-    --info:           #3b82f6;
+    /* Colori Persicup */
+    --accent:         #116138;   /* Verde Scuro Persicup */
+    --accent-glow:    rgba(17, 97, 56, 0.2);
+    --accent-hover:   #0d492a;
+    
+    --warning:        #f27e02;   /* Arancione Persicup */
+    --danger:         #e63946;
+    --info:           #457b9d;
 
-    --text-primary:   #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted:     #64748b;
+    --text-primary:   #2b2d42;
+    --text-secondary: #5c677d;
+    --text-muted:     #8d99ae;
 
-    --navbar-bg:      rgba(11, 14, 20, 0.85);
+    --navbar-bg:      var(--accent); /* Navbar Verde Piena */
 
-    --radius:         1rem;
-    --radius-sm:      0.625rem;
-    --shadow:         0 4px 24px rgba(0, 0, 0, 0.35);
-    --shadow-sm:      0 2px 12px rgba(0, 0, 0, 0.2);
-    --shadow-accent:  0 4px 20px var(--accent-glow);
+    /* Stile Pixel Soft (Richiami) */
+    --radius:         0.5rem;
+    --radius-sm:      0.25rem;
+    --shadow:         0 4px 12px rgba(0, 0, 0, 0.05);     /* Ombre morbide */
+    --shadow-sm:      0 2px 6px rgba(0, 0, 0, 0.05);
+    --shadow-accent:  0 4px 12px rgba(242, 126, 2, 0.3);          /* Hover ombra arancione soft */
 }
 
 /* ── Global ─────────────────────────────────────────────────────────────── */
@@ -46,60 +52,65 @@ body {
 /* ── Navbar ─────────────────────────────────────────────────────────────── */
 .navbar-premium {
     background: var(--navbar-bg);
-    backdrop-filter: blur(18px) saturate(180%);
-    -webkit-backdrop-filter: blur(18px) saturate(180%);
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 2px solid var(--warning);
     padding: 0.75rem 0;
     transition: background 0.3s;
 }
 
 .navbar-brand {
-    font-size: 1.25rem;
-    letter-spacing: -0.5px;
-    color: var(--text-primary) !important;
+    font-size: 1.5rem;
+    font-family: 'Silkscreen', monospace;
+    letter-spacing: 1px;
+    color: #ffffff !important;
 }
 
 .navbar-brand i {
-    color: var(--accent);
-    font-size: 1.35rem;
+    color: #ffffff;
+    font-size: 1.6rem;
 }
 
 .nav-link {
-    color: var(--text-secondary) !important;
-    font-weight: 500;
-    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.75) !important;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     padding: 0.5rem 0.85rem !important;
     border-radius: var(--radius-sm);
     transition: all 0.2s;
 }
 
 .nav-link:hover {
-    color: var(--text-primary) !important;
-    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff !important;
+    background: rgba(0, 0, 0, 0.15);
 }
 
 .nav-link-highlight {
-    color: var(--accent) !important;
-    font-weight: 600;
+    color: var(--warning) !important;
 }
 
 .nav-link-highlight:hover {
-    color: var(--accent-hover) !important;
-    background: var(--accent-glow);
+    color: #fff !important;
+    background: var(--warning) !important;
 }
 
 .btn-accent {
     background: var(--accent);
-    color: var(--bg-primary);
+    color: #ffffff !important;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
     font-weight: 600;
     border: none;
-    transition: all 0.25s;
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
 }
 .btn-accent:hover {
     background: var(--accent-hover);
-    color: var(--bg-primary);
+    color: #ffffff !important;
     box-shadow: var(--shadow-accent);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
 }
 
 /* ── Cards ──────────────────────────────────────────────────────────────── */
@@ -108,22 +119,23 @@ body {
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
-    transition: transform 0.25s, box-shadow 0.25s;
+    transition: transform 0.2s, box-shadow 0.2s;
     overflow: hidden;
 }
 
 .card-premium:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow);
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(17, 97, 56, 0.2);
 }
 
 .card-premium .card-header {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), transparent);
+    background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-subtle);
+    font-family: 'Inter', sans-serif;
     font-weight: 700;
     font-size: 0.95rem;
-    letter-spacing: 0.5px;
+    color: var(--accent);
     text-transform: uppercase;
     padding: 1rem 1.25rem;
 }
@@ -139,6 +151,7 @@ body {
     border-radius: var(--radius);
     padding: 1.5rem;
     text-align: center;
+    box-shadow: var(--shadow-sm);
     transition: transform 0.2s, box-shadow 0.2s;
 }
 .stat-card:hover {
@@ -152,35 +165,33 @@ body {
 }
 .stat-card .stat-number {
     font-size: 2.5rem;
-    font-weight: 800;
+    font-family: 'Silkscreen', monospace;
+    color: var(--accent);
     line-height: 1;
-    background: linear-gradient(135deg, var(--accent), var(--info));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
 }
 .stat-card .stat-label {
     color: var(--text-secondary);
-    font-size: 0.8rem;
+    font-size: 0.9rem;
+    font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-top: 0.25rem;
+    margin-top: 0.5rem;
 }
 
 /* ── Tables ─────────────────────────────────────────────────────────────── */
 .table-premium {
     --bs-table-bg: transparent;
     --bs-table-color: var(--text-primary);
-    font-size: 0.875rem;
+    font-size: 0.9rem;
     margin-bottom: 0;
 }
 .table-premium thead th {
-    background: rgba(16, 185, 129, 0.06);
-    color: var(--text-secondary);
-    font-weight: 600;
-    font-size: 0.75rem;
+    background: var(--bg-secondary);
+    color: var(--accent);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1px;
     border-bottom: 1px solid var(--border-subtle);
     padding: 0.75rem 1rem;
     white-space: nowrap;
@@ -248,24 +259,28 @@ body {
 
 .badge-win {
     background: var(--accent);
-    color: var(--bg-primary);
+    color: #fff;
+    border-radius: var(--radius-sm);
 }
 .badge-loss {
     background: var(--danger);
+    border-radius: var(--radius-sm);
 }
 .badge-draw {
     background: var(--warning);
-    color: var(--bg-primary);
+    color: #fff;
+    border-radius: var(--radius-sm);
 }
 
 /* ── Hero Banner (Player) ──────────────────────────────────────────────── */
 .hero-banner {
-    background: linear-gradient(135deg, #10b981 0%, #0ea5e9 50%, #8b5cf6 100%);
+    background: var(--warning); /* Orange Persicup Style */
     border-radius: var(--radius);
     padding: 3rem 2.5rem;
     position: relative;
     overflow: hidden;
     margin-bottom: 2rem;
+    box-shadow: var(--shadow);
 }
 .hero-banner::before {
     content: '\f1e3'; /* fa-futbol */
@@ -274,19 +289,23 @@ body {
     position: absolute;
     right: -20px;
     top: -20px;
-    font-size: 12rem;
-    opacity: 0.08;
+    font-size: 15rem;
+    color: var(--accent);
+    opacity: 0.2;
     transform: rotate(15deg);
 }
 .hero-banner h1 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    margin-bottom: 0.25rem;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    font-family: 'Silkscreen', monospace;
+    font-size: 2.8rem;
+    color: #ffffff;
+    text-shadow: 4px 4px 0px var(--accent);
+    margin-bottom: 0.5rem;
 }
 .hero-banner .hero-subtitle {
-    font-size: 1.1rem;
-    opacity: 0.85;
+    font-family: 'VT323', monospace;
+    font-size: 1.5rem;
+    color: #000;
+    font-weight: bold;
 }
 
 /* ── Tournament Bracket ────────────────────────────────────────────────── */
@@ -373,15 +392,17 @@ body {
 
 /* ── Section Title ──────────────────────────────────────────────────────── */
 .section-title {
-    font-weight: 800;
-    font-size: 1.75rem;
+    font-family: 'Silkscreen', monospace;
+    color: var(--accent);
+    font-size: 2rem;
     margin-bottom: 1.5rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
 }
 .section-title i {
-    color: var(--accent);
+    color: var(--warning);
 }
 .section-title .badge {
     font-size: 0.7rem;
@@ -395,11 +416,12 @@ body {
     justify-content: center;
     width: 36px;
     height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), var(--info));
+    background: var(--warning);
     color: #fff;
-    font-weight: 800;
-    font-size: 0.95rem;
+    font-family: 'Silkscreen', monospace;
+    font-size: 1.1rem;
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-sm);
 }
 
 /* ── Animations ─────────────────────────────────────────────────────────── */

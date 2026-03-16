@@ -2,22 +2,56 @@ from datetime import datetime, date
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db, login_manager
+from google.cloud import firestore
 
+# --- HELPER UTILITY: Estrazione DB Globale ---
+# db è il firestore client inizializzato in extensions.py
 
 # ── User ────────────────────────────────────────────────────────────────────
-class User(UserMixin, db.Model):
-    __tablename__ = 'users'
+class User(UserMixin):
+    collection_name = 'users'
 
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False, index=True)
-    password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default='giocatore')  # admin | organizzatore | capitano | giocatore
-    team_id = db.Column(db.Integer, db.ForeignKey('teams.id'), nullable=True)
+    def __init__(self, uid, username, password_hash, role='giocatore', team_id=None):
+        self.id = uid  # UserMixin requires an 'id' property
+        self.username = username
+        self.password_hash = password_hash
+        self.role = role
+        self.team_id = team_id
 
-    team = db.relationship('Team', backref=db.backref('players', lazy='dynamic'))
+    @staticmethod
+    def create(username, password, role='giocatore', team_id=None):
+        user_data = {
+            'username': username,
+            'password_hash': generate_password_hash(password),
+            'role': role,
+            'team_id': team_id
+        }
+        # Verifica unicità username in query
+        if User.get_by_username(username):
+            raise ValueError("Username already exists")
+        
+        _, doc_ref = db.collection(User.collection_name).add(user_data)
+        return doc_ref.id
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+    @staticmethod
+    def get_by_id(uid):
+        if not db: return None
+        doc = db.collection(User.collection_name).document(uid).get()
+        if doc.exists:
+            d = doc.to_dict()
+            return User(uid=doc.id, username=d.get('username'), password_hash=d.get('password_hash'),
+                        role=d.get('role'), team_id=d.get('team_id'))
+        return None
+
+    @staticmethod
+    def get_by_username(username):
+        if not db: return None
+        docs = db.collection(User.collection_name).where('username', '==', username).limit(1).stream()
+        for doc in docs:
+            d = doc.to_dict()
+            return User(uid=doc.id, username=d.get('username'), password_hash=d.get('password_hash'),
+                        role=d.get('role'), team_id=d.get('team_id'))
+        return None
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -25,93 +59,136 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'<User {self.username} [{self.role}]>'
 
-
 @login_manager.user_loader
 def load_user(user_id):
-    return db.session.get(User, int(user_id))
+    return User.get_by_id(user_id)
 
 
 # ── Team ────────────────────────────────────────────────────────────────────
-class Team(db.Model):
-    __tablename__ = 'teams'
+class Team:
+    collection_name = 'teams'
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=True, nullable=False)
-    group = db.Column(db.String(1), nullable=False)  # A | B | C | D
-    logo_url = db.Column(db.String(256), default='')
+    @staticmethod
+    def create(name, group=None, logo_url=''):
+        team_data = {
+            'name': name,
+            'group': group,
+            'logo_url': logo_url,
+            'roster': []  # Lista di dizionari invece di una tabella separata RosterPlayer
+        }
+        # In Firebase possiamo annidare i roster_players direttamente qui come array di mappe/dict
+        _, doc_ref = db.collection(Team.collection_name).add(team_data)
+        return doc_ref.id
 
-    roster = db.relationship('RosterPlayer', backref='team', lazy='dynamic', cascade='all, delete-orphan')
+    @staticmethod
+    def get_by_id(uid):
+        doc = db.collection(Team.collection_name).document(uid).get()
+        if doc.exists:
+            d = doc.to_dict()
+            d['id'] = doc.id
+            return d
+        return None
 
-    def __repr__(self):
-        return f'<Team {self.name} (Group {self.group})>'
+    @staticmethod
+    def get_all():
+        docs = db.collection(Team.collection_name).stream()
+        return [{**doc.to_dict(), 'id': doc.id} for doc in docs]
+
+    @staticmethod
+    def get_by_group(group_name):
+        docs = db.collection(Team.collection_name).where('group', '==', group_name).stream()
+        return [{**doc.to_dict(), 'id': doc.id} for doc in docs]
+
+    @staticmethod
+    def add_player_to_roster(team_id, player_data):
+        """player_data = {'nome': '...', 'cognome': '...', 'scadenza_visita_medica': 'YYYY-MM-DD', 'file_visita': '...'}"""
+        team_ref = db.collection(Team.collection_name).document(team_id)
+        # Firebase ArrayUnion per appendere alla lista senza sovrascrivere il resto
+        team_ref.update({
+            'roster': firestore.ArrayUnion([player_data])
+        })
 
 
 # ── Match ───────────────────────────────────────────────────────────────────
-class Match(db.Model):
-    __tablename__ = 'matches'
+class Match:
+    collection_name = 'matches'
 
-    id = db.Column(db.Integer, primary_key=True)
-    home_team_id = db.Column(db.Integer, db.ForeignKey('teams.id'), nullable=False)
-    away_team_id = db.Column(db.Integer, db.ForeignKey('teams.id'), nullable=False)
-    home_score = db.Column(db.Integer, nullable=True, default=0)
-    away_score = db.Column(db.Integer, nullable=True, default=0)
-    phase = db.Column(db.String(20), nullable=False, default='group')  # group | quarter | semi | final
-    group = db.Column(db.String(1), nullable=True)  # A-D for group phase, None for knockouts
-    played = db.Column(db.Boolean, default=False)
-    match_date = db.Column(db.DateTime, default=datetime.utcnow)
-    man_of_match = db.Column(db.String(100), nullable=True)  # MVP name
+    @staticmethod
+    def create(home_team_id, away_team_id, group=None, phase='group'):
+        match_data = {
+            'home_team_id': home_team_id,
+            'away_team_id': away_team_id,
+            'home_score': 0,
+            'away_score': 0,
+            'phase': phase,
+            'group': group,
+            'played': False,
+            'match_date': None,
+            'match_time': None,
+            'man_of_match': None,
+            'goals': []  # Anche qui annidiamo i goal direttamente nel match (lista di dizionari)
+        }
+        _, doc_ref = db.collection(Match.collection_name).add(match_data)
+        return doc_ref.id
 
-    home_team = db.relationship('Team', foreign_keys=[home_team_id], backref='home_matches')
-    away_team = db.relationship('Team', foreign_keys=[away_team_id], backref='away_matches')
-    goals = db.relationship('Goal', backref='match', lazy='dynamic', cascade='all, delete-orphan',
-                            order_by='Goal.minute')
+    @staticmethod
+    def get_all():
+        docs = db.collection(Match.collection_name).stream()
+        return [{**doc.to_dict(), 'id': doc.id} for doc in docs]
 
-    def recalc_score(self):
-        """Recalculate score from goals."""
-        self.home_score = Goal.query.filter_by(match_id=self.id, team_id=self.home_team_id).count()
-        self.away_score = Goal.query.filter_by(match_id=self.id, team_id=self.away_team_id).count()
-        self.played = True
+    @staticmethod
+    def get_by_group(group_name):
+        docs = db.collection(Match.collection_name).where('group', '==', group_name).stream()
+        return [{**doc.to_dict(), 'id': doc.id} for doc in docs]
 
-    def __repr__(self):
-        if self.played:
-            return f'<Match {self.home_team.name} {self.home_score}-{self.away_score} {self.away_team.name}>'
-        return f'<Match {self.home_team.name} vs {self.away_team.name} ({self.phase})>'
+    @staticmethod
+    def get_by_id(uid):
+        doc = db.collection(Match.collection_name).document(uid).get()
+        if doc.exists:
+            d = doc.to_dict()
+            d['id'] = doc.id
+            return d
+        return None
 
+    @staticmethod
+    def update_score_from_goals(match_id):
+        # A differenza del relazionale, i goal sono già nella partita.
+        match_data = Match.get_by_id(match_id)
+        if not match_data: return
+        
+        home_score = 0
+        away_score = 0
+        for goal in match_data.get('goals', []):
+            if goal['team_id'] == match_data['home_team_id']:
+                home_score += 1
+            elif goal['team_id'] == match_data['away_team_id']:
+                away_score += 1
+                
+        # Aggiorna il DB
+        db.collection(Match.collection_name).document(match_id).update({
+            'home_score': home_score,
+            'away_score': away_score,
+            'played': True
+        })
 
-# ── Goal (scorer) ──────────────────────────────────────────────────────────
-class Goal(db.Model):
-    __tablename__ = 'goals'
+    @staticmethod
+    def add_goal(match_id, team_id, player_name, minute=None):
+        goal_data = {
+            'team_id': team_id,
+            'player_name': player_name,
+            'minute': minute
+        }
+        doc_ref = db.collection(Match.collection_name).document(match_id)
+        doc_ref.update({
+            'goals': firestore.ArrayUnion([goal_data])
+        })
+        Match.update_score_from_goals(match_id)
 
-    id = db.Column(db.Integer, primary_key=True)
-    match_id = db.Column(db.Integer, db.ForeignKey('matches.id'), nullable=False)
-    team_id = db.Column(db.Integer, db.ForeignKey('teams.id'), nullable=False)
-    player_name = db.Column(db.String(100), nullable=False)
-    minute = db.Column(db.Integer, nullable=True)
-
-    team = db.relationship('Team')
-
-    def __repr__(self):
-        m = f"{self.minute}'" if self.minute else ''
-        return f'<Goal {self.player_name} {m} ({self.team.name})>'
-
-
-# ── Roster Player (managed by captain) ──────────────────────────────────────
-class RosterPlayer(db.Model):
-    __tablename__ = 'roster_players'
-
-    id = db.Column(db.Integer, primary_key=True)
-    team_id = db.Column(db.Integer, db.ForeignKey('teams.id'), nullable=False)
-    nome = db.Column(db.String(100), nullable=False)
-    cognome = db.Column(db.String(100), nullable=False)
-    scadenza_visita_medica = db.Column(db.Date, nullable=True)
-    file_visita_medica = db.Column(db.String(256), nullable=True)  # filename in uploads/
-
-    @property
-    def visita_scaduta(self):
-        if not self.scadenza_visita_medica:
-            return True
-        return self.scadenza_visita_medica < date.today()
-
-    def __repr__(self):
-        return f'<RosterPlayer {self.nome} {self.cognome} ({self.team.name})>'
+    @staticmethod
+    def set_datetime(match_id, date_str, time_str):
+        doc_ref = db.collection(Match.collection_name).document(match_id)
+        doc_ref.update({
+            'match_date': date_str,
+            'match_time': time_str
+        })
 
