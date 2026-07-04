@@ -2,197 +2,297 @@
 {% block title %}Match Manager — Torneo Calcio{% endblock %}
 
 {% block content %}
-<h2 class="section-title">
-    <i class="fa-solid fa-pen-to-square"></i>Match Manager
-</h2>
+<section class="page-section">
+    <div class="container admin-wrap">
 
-<div class="mb-4 fade-in-up text-end">
-    <form action="{{ url_for('admin.generate_group_matches') }}" method="POST" class="d-inline">
-        <button type="submit" class="btn btn-accent rounded-pill px-4 shadow-sm" onclick="return confirm('Vuoi generare automaticamente le 6 partite per i gironi?\n\nAttenzione: Vengono elaborate solo le squadre di gironi completi (esattamente 4 squadre presenti). Se esistono già delle partite in un girone verranno ignorate per impedire duplicati.')">
-            <i class="fa-solid fa-magic me-2"></i>Genera Partite Gironi
-        </button>
-    </form>
-</div>
-
-<!-- ── Group Matches ─────────────────────────────────────────────────── -->
-{% if group_matches %}
-<div class="card-premium mb-4 fade-in-up">
-    <div class="card-header"><i class="fa-solid fa-layer-group me-2"></i>Partite Gironi</div>
-    <div class="card-body p-0">
-        <div class="table-responsive-premium">
-            <table class="table table-premium mb-0">
-                <thead>
-                    <tr>
-                        <th class="text-center py-3">Girone</th>
-                        <th class="text-center py-3">Partita</th>
-                        <th class="text-center py-3">Data/Ora</th>
-                        <th class="text-center py-3">Stato</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for match in group_matches %}
-                    <tr class="align-middle cursor-pointer"
-                        onclick="window.location='{{ url_for('admin.match_detail', match_id=match.id) }}';"
-                        style="cursor:pointer;" title="Clicca per dettaglio">
-                        <td class="text-center"><span class="group-badge">{{ match.group }}</span></td>
-                        <td class="text-center">
-                            <div class="d-flex justify-content-center align-items-center">
-                                <span class="badge shadow-sm" style="background:var(--bg-tertiary); color:var(--text-primary); border: 1px solid var(--border-subtle); font-size: 0.9rem; min-width: 140px; padding: 10px;">{{ match.home_team.name }}</span>
-                                <span class="fw-800 mx-3" style="font-size: 1.2rem; min-width: 60px;">
-                                    {% if match.played %}
-                                    <span class="text-accent">{{ match.home_score }} - {{ match.away_score }}</span>
-                                    {% else %}
-                                    <span class="text-muted fs-6" style="opacity:0.5;">VS</span>
-                                    {% endif %}
-                                </span>
-                                <span class="badge shadow-sm" style="background:var(--bg-tertiary); color:var(--text-primary); border: 1px solid var(--border-subtle); font-size: 0.9rem; min-width: 140px; padding: 10px;">{{ match.away_team.name }}</span>
-                            </div>
-                        </td>
-                        <td>
-                            {% if match.match_date or match.match_time %}
-                                <div class="small fw-500 text-secondary">
-                                    {% if match.match_date %}<i class="fa-regular fa-calendar me-1"></i>{{ match.match_date }}<br>{% endif %}
-                                    {% if match.match_time %}<i class="fa-regular fa-clock me-1"></i>{{ match.match_time }}{% endif %}
-                                </div>
-                            {% else %}
-                                <span class="text-muted small">—</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if match.played %}
-                            <span class="badge bg-success rounded-pill"><i
-                                    class="fa-solid fa-check me-1"></i>Giocata</span>
-                            {% else %}
-                            <span class="badge bg-secondary rounded-pill">Da giocare</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="admin-head">
+            <h2 class="page-title">Match Manager</h2>
+            <div class="admin-head-actions">
+                <form action="{{ url_for('admin.generate_group_matches') }}" method="POST">
+                    <button type="submit" class="btn-clean btn-clean--block-mobile"
+                            onclick="return confirm('Vuoi generare automaticamente le 6 partite per i gironi?\n\nAttenzione: Vengono elaborate solo le squadre di gironi completi (esattamente 4 squadre presenti). Se esistono già delle partite in un girone verranno ignorate per impedire duplicati.')">
+                        Genera partite gironi
+                    </button>
+                </form>
+            </div>
         </div>
-    </div>
-</div>
-{% endif %}
 
-<!-- ── Manual Match Creation ───────────────────────────────────────────── -->
-<div class="card-premium mb-4 fade-in-up">
-    <div class="card-header bg-warning text-dark"><i class="fa-solid fa-plus-circle me-2"></i>Aggiungi Partita Extra-Girone</div>
-    <div class="card-body">
-        <form action="{{ url_for('admin.create_playoff') }}" method="POST">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted">Squadra Casa</label>
-                    <select class="form-select" name="home_team_id" required>
-                        <option value="">-- Seleziona --</option>
-                        {% for t in teams %}
-                        <option value="{{ t.id }}">{{ t.name }}</option>
+        <!-- Filtri -->
+        <div class="admin-block">
+            <div class="admin-block-head"><span>Filtri</span></div>
+            <div class="form-row">
+                <div>
+                    <label class="form-clean-label">Fase</label>
+                    <select class="form-clean" id="filterPhase">
+                        <option value="all">Tutte le fasi</option>
+                        <option value="group">Gironi</option>
+                        {% for g in available_groups %}
+                        <option value="group-{{ g }}">Girone {{ g }}</option>
+                        {% endfor %}
+                        {% for p in available_phases %}
+                        <option value="playoff-{{ p }}">{{ p }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted">Squadra Ospite</label>
-                    <select class="form-select" name="away_team_id" required>
-                        <option value="">-- Seleziona --</option>
-                        {% for t in teams %}
-                        <option value="{{ t.id }}">{{ t.name }}</option>
+                <div>
+                    <label class="form-clean-label">Data</label>
+                    <select class="form-clean" id="filterDate">
+                        <option value="all">Tutte le date</option>
+                        <option value="no-date">Senza data</option>
+                        {% for d in available_dates %}
+                        <option value="{{ d }}">{{ d }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label small fw-bold text-muted">Fase / Turno</label>
-                    <select class="form-select" name="phase" required>
-                        <option value="Quarti">Quarti di Finale</option>
-                        <option value="Semifinale">Semifinale</option>
-                        <option value="Finale">Finale 1°/2°</option>
-                        <option value="Finalina">Finale 3°/4°</option>
+                <div>
+                    <label class="form-clean-label">Stato</label>
+                    <select class="form-clean" id="filterStatus">
+                        <option value="all">Tutti</option>
+                        <option value="played">Giocate</option>
+                        <option value="pending">Da giocare</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label small fw-bold text-muted">Data</label>
-                    <input type="date" class="form-control" name="match_date">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label small fw-bold text-muted">Ora</label>
-                    <input type="time" class="form-control" name="match_time">
-                </div>
-                <div class="col-12 mt-3 text-end">
-                    <button type="submit" class="btn btn-accent px-4"><i class="fa-solid fa-check me-2"></i>Crea Partita</button>
+                <div class="form-row-action">
+                    <button type="button" class="btn-clean btn-clean--ghost btn-clean--block" onclick="resetFilters()">Reset</button>
                 </div>
             </div>
-        </form>
-    </div>
-</div>
-
-<!-- ── Playoff Matches ───────────────────────────────────────────────── -->
-{% if playoff_matches %}
-<div class="card-premium fade-in-up">
-    <div class="card-header"><i class="fa-solid fa-fire me-2"></i>Partite Fase Finale</div>
-    <div class="card-body p-0">
-        <div class="table-responsive-premium">
-            <table class="table table-premium mb-0">
-                <thead>
-                    <tr>
-                        <th class="text-center py-3">Fase</th>
-                        <th class="text-center py-3">Partita</th>
-                        <th class="text-center py-3">Data/Ora</th>
-                        <th class="text-center py-3">Stato</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for match in playoff_matches %}
-                    <tr class="align-middle cursor-pointer"
-                        onclick="window.location='{{ url_for('admin.match_detail', match_id=match.id) }}';"
-                        style="cursor:pointer;" title="Clicca per dettaglio">
-                        <td class="text-center">
-                            <span class="badge bg-warning text-dark rounded-pill">
-                                {{ match.phase | upper }}
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            <div class="d-flex justify-content-center align-items-center">
-                                <span class="badge shadow-sm" style="background:var(--bg-tertiary); color:var(--text-primary); border: 1px solid var(--border-subtle); font-size: 0.9rem; min-width: 140px; padding: 10px;">{{ match.home_team.name }}</span>
-                                <span class="fw-800 mx-3" style="font-size: 1.2rem; min-width: 60px;">
-                                    {% if match.played %}
-                                    <span class="text-accent">{{ match.home_score }} - {{ match.away_score }}</span>
-                                    {% else %}
-                                    <span class="text-muted fs-6" style="opacity:0.5;">VS</span>
-                                    {% endif %}
-                                </span>
-                                <span class="badge shadow-sm" style="background:var(--bg-tertiary); color:var(--text-primary); border: 1px solid var(--border-subtle); font-size: 0.9rem; min-width: 140px; padding: 10px;">{{ match.away_team.name }}</span>
-                            </div>
-                        </td>
-                        <td>
-                            {% if match.match_date or match.match_time %}
-                                <div class="small fw-500 text-secondary">
-                                    {% if match.match_date %}<i class="fa-regular fa-calendar me-1"></i>{{ match.match_date }}<br>{% endif %}
-                                    {% if match.match_time %}<i class="fa-regular fa-clock me-1"></i>{{ match.match_time }}{% endif %}
-                                </div>
-                            {% else %}
-                                <span class="text-muted small">—</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if match.played %}
-                            <span class="badge bg-success rounded-pill"><i
-                                    class="fa-solid fa-check me-1"></i>Giocata</span>
-                            {% else %}
-                            <span class="badge bg-secondary rounded-pill">Da giocare</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
         </div>
-    </div>
-</div>
-{% endif %}
 
-{% if not group_matches and not playoff_matches %}
-<div class="text-center py-5 text-secondary">
-    <i class="fa-solid fa-calendar-xmark fa-3x mb-3 d-block"></i>
-    <p>Nessuna partita trovata. Utilizza il seed script per popolare il database.</p>
-</div>
-{% endif %}
+        <!-- Calendario partite -->
+        {% if all_matches %}
+        <div class="admin-block admin-block--flush">
+            <div class="admin-block-head" style="padding: 0.85rem 1rem; border-bottom: 1px solid #eee; margin: 0;">
+                <span>Calendario partite</span>
+                <span class="count" id="matchCount">{{ all_matches|length }}</span>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table" id="matchTable">
+                    <thead>
+                        <tr>
+                            <th class="center" style="width:70px;">Fase</th>
+                            <th class="center">Partita</th>
+                            <th class="center d-none d-sm-table-cell">Data/Ora</th>
+                            <th class="center d-none d-md-table-cell">Stato</th>
+                            <th style="width:50px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for match in all_matches %}
+                        <tr class="match-row"
+                            data-phase="{{ match.phase }}"
+                            data-group="{{ match.group or '' }}"
+                            data-date="{{ match.match_date or '' }}"
+                            data-played="{{ 'played' if match.played else 'pending' }}">
+                            <td class="center clickable"
+                                onclick="window.location='{{ url_for('admin.match_detail', match_id=match.id) }}';">
+                                {% if match.phase == 'group' %}
+                                <span class="chip chip--group">{{ match.group }}</span>
+                                {% else %}
+                                <span class="chip chip--phase">{{ match.phase }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="center clickable"
+                                onclick="window.location='{{ url_for('admin.match_detail', match_id=match.id) }}';">
+                                <div class="team-cell">
+                                    <span class="team-name">{{ match.home_team.name }}</span>
+                                    {% if match.played %}
+                                    <span class="score">{{ match.home_score }} – {{ match.away_score }}</span>
+                                    {% else %}
+                                    <span class="vs">vs</span>
+                                    {% endif %}
+                                    <span class="team-name">{{ match.away_team.name }}</span>
+                                </div>
+                            </td>
+                            <td class="center d-none d-sm-table-cell clickable"
+                                onclick="window.location='{{ url_for('admin.match_detail', match_id=match.id) }}';">
+                                {% if match.match_date or match.match_time %}
+                                <div style="font-size: 0.85rem; color:#4a4a4a; line-height:1.3;">
+                                    {% if match.match_date %}{{ match.match_date }}{% endif %}
+                                    {% if match.match_time %}<br><span style="color:#8a8a8a;">{{ match.match_time }}</span>{% endif %}
+                                </div>
+                                {% else %}
+                                <span style="color:#8a8a8a;">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="center d-none d-md-table-cell clickable"
+                                onclick="window.location='{{ url_for('admin.match_detail', match_id=match.id) }}';">
+                                {% if match.played %}
+                                <span class="chip chip--success">Giocata</span>
+                                {% else %}
+                                <span class="chip chip--muted">Da giocare</span>
+                                {% endif %}
+                            </td>
+                            <td class="col-actions">
+                                <form action="{{ url_for('admin.delete_match', match_id=match.id) }}" method="POST"
+                                      onclick="event.stopPropagation();" style="display:inline;">
+                                    <button type="submit" class="btn-clean btn-clean--danger"
+                                            onclick="return confirm('Sei sicuro di voler eliminare questa partita?');"
+                                            title="Elimina partita">✕</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-block">Nessuna partita trovata.</div>
+        {% endif %}
+
+        <!-- Aggiungi partita girone -->
+        <div class="admin-block">
+            <div class="admin-block-head"><span>Aggiungi partita girone</span></div>
+            <form action="{{ url_for('admin.create_group_match') }}" method="POST">
+                <div class="form-grid">
+                    <div class="col-12 col-md-6">
+                        <label class="form-clean-label">Squadra casa</label>
+                        <select class="form-clean" name="home_team_id" required>
+                            <option value="">— Seleziona —</option>
+                            {% for t in teams %}
+                            <option value="{{ t.id }}">{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-clean-label">Squadra ospite</label>
+                        <select class="form-clean" name="away_team_id" required>
+                            <option value="">— Seleziona —</option>
+                            {% for t in teams %}
+                            <option value="{{ t.id }}">{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <label class="form-clean-label">Girone</label>
+                        <select class="form-clean" name="group" required>
+                            <option value="A">Girone A</option>
+                            <option value="B">Girone B</option>
+                            <option value="C">Girone C</option>
+                            <option value="D">Girone D</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <label class="form-clean-label">Data</label>
+                        <input type="date" class="form-clean" name="match_date">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-clean-label">Ora</label>
+                        <input type="time" class="form-clean" name="match_time">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-clean">Crea partita girone</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Aggiungi partita extra-girone -->
+        <div class="admin-block">
+            <div class="admin-block-head"><span>Aggiungi partita extra-girone</span></div>
+            <form action="{{ url_for('admin.create_playoff') }}" method="POST">
+                <div class="form-grid">
+                    <div class="col-12 col-md-6">
+                        <label class="form-clean-label">Squadra casa</label>
+                        <select class="form-clean" name="home_team_id" required>
+                            <option value="">— Seleziona —</option>
+                            {% for t in teams %}
+                            <option value="{{ t.id }}">{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-clean-label">Squadra ospite</label>
+                        <select class="form-clean" name="away_team_id" required>
+                            <option value="">— Seleziona —</option>
+                            {% for t in teams %}
+                            <option value="{{ t.id }}">{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <label class="form-clean-label">Fase / Turno</label>
+                        <select class="form-clean" name="phase" required>
+                            <option value="Quarti">Quarti di Finale</option>
+                            <option value="Semifinale">Semifinale</option>
+                            <option value="Finale">Finale 1°/2°</option>
+                            <option value="Finalina">Finale 3°/4°</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <label class="form-clean-label">Data</label>
+                        <input type="date" class="form-clean" name="match_date">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-clean-label">Ora</label>
+                        <input type="time" class="form-clean" name="match_time">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-clean btn-clean--warning">Crea partita</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</section>
+
+<script>
+function applyFilters() {
+    const phase = document.getElementById('filterPhase').value;
+    const date = document.getElementById('filterDate').value;
+    const status = document.getElementById('filterStatus').value;
+    const rows = document.querySelectorAll('#matchTable .match-row');
+    let visible = 0;
+
+    rows.forEach(row => {
+        let show = true;
+
+        if (phase !== 'all') {
+            const rowPhase = row.dataset.phase;
+            const rowGroup = row.dataset.group;
+            if (phase === 'group') {
+                if (rowPhase !== 'group') show = false;
+            } else if (phase.startsWith('group-')) {
+                const g = phase.replace('group-', '');
+                if (rowPhase !== 'group' || rowGroup !== g) show = false;
+            } else if (phase.startsWith('playoff-')) {
+                const p = phase.replace('playoff-', '');
+                if (rowPhase !== p) show = false;
+            }
+        }
+
+        if (date !== 'all') {
+            const rowDate = row.dataset.date;
+            if (date === 'no-date') {
+                if (rowDate !== '') show = false;
+            } else {
+                if (rowDate !== date) show = false;
+            }
+        }
+
+        if (status !== 'all') {
+            if (row.dataset.played !== status) show = false;
+        }
+
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+
+    const counter = document.getElementById('matchCount');
+    if (counter) counter.textContent = visible;
+}
+
+function resetFilters() {
+    document.getElementById('filterPhase').value = 'all';
+    document.getElementById('filterDate').value = 'all';
+    document.getElementById('filterStatus').value = 'all';
+    applyFilters();
+}
+
+['filterPhase', 'filterDate', 'filterStatus'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', applyFilters);
+});
+</script>
 {% endblock %}

@@ -1,104 +1,136 @@
 {% extends 'base.html' %}
-{% block title %}{{ match.home_team.name }} vs {{ match.away_team.name }} — Torneo Calcio{% endblock %}
+{% block title %}{{ match.home_team.name }} vs {{ match.away_team.name }} — Persicup{% endblock %}
 
 {% block content %}
 
+<style>
+.scorers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+@media (max-width: 540px) {
+    .scorers-grid { grid-template-columns: 1fr; }
+    .match-head .team-name-lg { font-size: 0.95rem; }
+    .match-head .score-big { font-size: 1.6rem; }
+}
+.match-detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+}
+</style>
+
 <!-- ── Back link ──────────────────────────────────────────────────── -->
-{% if match.phase == 'group' %}
-<a href="{{ url_for('main.group_detail', group=match.group) }}"
-    class="btn btn-sm btn-outline-secondary rounded-pill mb-3">
-    <i class="fa-solid fa-arrow-left me-1"></i>Torna al Girone {{ match.group }}
+{% if back == 'home' %}
+<a href="{{ url_for('main.index') }}" class="back-link">
+    <i class="fa-solid fa-arrow-left"></i> Home
+</a>
+{% elif back == 'risultati' %}
+<a href="{{ url_for('main.risultati') }}" class="back-link">
+    <i class="fa-solid fa-arrow-left"></i> Risultati
+</a>
+{% elif match.phase == 'group' %}
+<a href="{{ url_for('main.group_detail', group=match.group) }}" class="back-link">
+    <i class="fa-solid fa-arrow-left"></i> Girone {{ match.group }}
 </a>
 {% else %}
-<a href="{{ url_for('main.tournament') }}" class="btn btn-sm btn-outline-secondary rounded-pill mb-3">
-    <i class="fa-solid fa-arrow-left me-1"></i>Torna al Tabellone
+<a href="{{ url_for('main.tournament') }}" class="back-link">
+    <i class="fa-solid fa-arrow-left"></i> Tabellone
 </a>
 {% endif %}
 
-<!-- ── Match Header ──────────────────────────────────────────────── -->
-<div class="hero-banner fade-in-up text-center">
-    <div class="d-flex justify-content-center align-items-center gap-4 flex-wrap">
-        <div class="text-end" style="min-width:120px;">
-            <h3 class="mb-0 fw-800">{{ match.home_team.name }}</h3>
-        </div>
-        <div class="px-3">
-            {% if match.played %}
-            <div style="font-size:2.5rem; font-weight:800; letter-spacing:2px;">
-                {{ match.home_score }} - {{ match.away_score }}
-            </div>
-            <span class="badge bg-success rounded-pill">Giocata</span>
+<!-- ── Match header ───────────────────────────────────────────────── -->
+<div class="match-head fade-in-up">
+    <div class="teams-row">
+        <div><span class="team-name-lg">{{ match.home_team.name }}</span></div>
+        <div>
+            {% if match.played or status == 'live' %}
+            <div class="score-big">{{ match.home_score }} – {{ match.away_score }}</div>
             {% else %}
-            <div style="font-size:2rem; font-weight:600; color:var(--text-secondary);">
-                vs
-            </div>
-            <span class="badge bg-secondary rounded-pill">Da giocare</span>
-            {% endif %}
-            {% if match.phase == 'group' %}
-            <span class="group-badge ms-2">{{ match.group }}</span>
-            {% else %}
-            <span class="badge bg-warning text-dark rounded-pill ms-2">{{ match.phase|upper }}</span>
+            <div class="score-big" style="color:#ccc;">–</div>
             {% endif %}
         </div>
-        <div class="text-start" style="min-width:120px;">
-            <h3 class="mb-0 fw-800">{{ match.away_team.name }}</h3>
-        </div>
+        <div><span class="team-name-lg">{{ match.away_team.name }}</span></div>
+    </div>
+    <div class="match-detail-meta">
+        {% if match.played %}
+        <span class="status-badge status-badge--played">Giocata</span>
+        {% elif status == 'live' %}
+        <span class="status-badge status-badge--live">LIVE</span>
+        {% else %}
+        <span class="status-badge status-badge--upcoming">Da giocare</span>
+        {% endif %}
+        {% if match.phase == 'group' %}
+        <span class="chip chip--group">{{ match.group }}</span>
+        {% else %}
+        <span class="chip chip--phase">{{ match.phase }}</span>
+        {% endif %}
+        {% if match.match_date %}
+        <span class="chip chip--muted">
+            <i class="fa-regular fa-calendar"></i>
+            {{ match.match_date }}{% if match.match_time %} · {{ match.match_time }}{% endif %}
+        </span>
+        {% endif %}
     </div>
 </div>
 
-{% if match.played %}
-<div class="row g-4 mt-2">
+{% if match.played or status == 'live' %}
 
-    <!-- ── Marcatori Casa ────────────────────────────────────────── -->
-    <div class="col-md-6 fade-in-up">
-        <div class="card-premium">
-            <div class="card-header">
-                <i class="fa-solid fa-futbol me-2 text-success"></i>{{ match.home_team.name }}
-                <span class="badge bg-success rounded-pill ms-2">{{ home_goals|length }}</span>
-            </div>
-            <div class="card-body">
-                {% if home_goals %}
-                <ul class="list-unstyled mb-0">
-                    {% for g in home_goals %}
-                    <li class="py-2 border-bottom border-secondary border-opacity-25">
-                        <i class="fa-solid fa-futbol text-success me-2"></i>
-                        <strong>{{ g.player_name }}</strong>
-                        {% if g.minute %}
-                        <span class="text-muted ms-1">{{ g.minute }}'</span>
-                        {% endif %}
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p class="text-muted mb-0 text-center">Nessun gol</p>
-                {% endif %}
-            </div>
+<!-- ── Marcatori ─────────────────────────────────────────────────── -->
+<div class="scorers-grid">
+
+    <!-- Casa -->
+    <div class="admin-block admin-block--flush fade-in-up">
+        <div class="admin-block-head">
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ match.home_team.name }}</span>
+            <span class="chip chip--success" style="flex-shrink:0;">{{ home_goals|length }} goal</span>
+        </div>
+        <div class="admin-block-body">
+            {% if home_goals %}
+            <ul class="goal-list">
+                {% for g in home_goals %}
+                <li>
+                    <span class="goal-name">
+                        <i class="fa-solid fa-futbol" style="color:var(--accent); font-size:0.75rem; margin-right:0.35rem;"></i>
+                        {{ g.player_name }}{% if g.is_own_goal %} <em style="color:#999; font-style:normal;">(aut.)</em>{% endif %}
+                    </span>
+                    {% if g.minute %}<span class="goal-min">{{ g.minute }}'</span>{% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="goal-empty">Nessun goal</p>
+            {% endif %}
         </div>
     </div>
 
-    <!-- ── Marcatori Ospite ──────────────────────────────────────── -->
-    <div class="col-md-6 fade-in-up">
-        <div class="card-premium">
-            <div class="card-header">
-                <i class="fa-solid fa-futbol me-2 text-info"></i>{{ match.away_team.name }}
-                <span class="badge bg-info rounded-pill ms-2">{{ away_goals|length }}</span>
-            </div>
-            <div class="card-body">
-                {% if away_goals %}
-                <ul class="list-unstyled mb-0">
-                    {% for g in away_goals %}
-                    <li class="py-2 border-bottom border-secondary border-opacity-25">
-                        <i class="fa-solid fa-futbol text-info me-2"></i>
-                        <strong>{{ g.player_name }}</strong>
-                        {% if g.minute %}
-                        <span class="text-muted ms-1">{{ g.minute }}'</span>
-                        {% endif %}
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p class="text-muted mb-0 text-center">Nessun gol</p>
-                {% endif %}
-            </div>
+    <!-- Ospite -->
+    <div class="admin-block admin-block--flush fade-in-up">
+        <div class="admin-block-head">
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ match.away_team.name }}</span>
+            <span class="chip chip--success" style="flex-shrink:0;">{{ away_goals|length }} goal</span>
+        </div>
+        <div class="admin-block-body">
+            {% if away_goals %}
+            <ul class="goal-list">
+                {% for g in away_goals %}
+                <li>
+                    <span class="goal-name">
+                        <i class="fa-solid fa-futbol" style="color:var(--accent); font-size:0.75rem; margin-right:0.35rem;"></i>
+                        {{ g.player_name }}{% if g.is_own_goal %} <em style="color:#999; font-style:normal;">(aut.)</em>{% endif %}
+                    </span>
+                    {% if g.minute %}<span class="goal-min">{{ g.minute }}'</span>{% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="goal-empty">Nessun goal</p>
+            {% endif %}
         </div>
     </div>
 
@@ -106,22 +138,24 @@
 
 <!-- ── MVP ────────────────────────────────────────────────────────── -->
 {% if match.man_of_match %}
-<div class="fade-in-up mt-4">
-    <div class="card-premium text-center">
-        <div class="card-body py-3">
-            <i class="fa-solid fa-star text-warning fa-2x mb-2"></i>
-            <h5 class="fw-700 mb-0">Miglior Giocatore</h5>
-            <p class="mb-0 mt-1" style="font-size:1.2rem; color:var(--accent-primary);">{{ match.man_of_match }}</p>
-        </div>
-    </div>
+<div class="mvp-box fade-in-up mt-1" style="text-align:center;">
+    <i class="fa-solid fa-star" style="color:var(--warning); margin-right:0.4rem;"></i>
+    <strong>MVP</strong> — {{ match.man_of_match }}
 </div>
 {% endif %}
 
 {% else %}
-<div class="text-center py-5 text-secondary mt-4">
-    <i class="fa-solid fa-clock fa-3x mb-3 d-block"></i>
-    <p class="mb-0">Partita non ancora giocata. I dettagli saranno disponibili dopo il fischio finale.</p>
+
+<!-- ── Non ancora giocata ─────────────────────────────────────────── -->
+<div class="empty-block fade-in-up mt-2">
+    <i class="fa-regular fa-clock" style="font-size:1.8rem; margin-bottom:0.5rem; display:block; color:#ccc;"></i>
+    Partita non ancora giocata. I dettagli saranno disponibili dopo il fischio finale.
 </div>
+
+{% endif %}
+
+{% if status == 'live' %}
+<script>setTimeout(() => location.reload(), 30000);</script>
 {% endif %}
 
 {% endblock %}

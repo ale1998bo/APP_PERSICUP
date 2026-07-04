@@ -1,3 +1,5 @@
+import os
+import json
 import firebase_admin
 from firebase_admin import credentials, firestore
 from flask_login import LoginManager
@@ -9,10 +11,18 @@ def get_db():
 db = LocalProxy(get_db)
 
 def init_firebase(app):
-    # Inizializza l'app Firebase usando le credenziali in root directory
-    cred = credentials.Certificate("firebase_credentials.json")
-    if not firebase_admin._apps:
-        firebase_admin.initialize_app(cred)
+    if firebase_admin._apps:
+        return
+    cred_json = os.environ.get('FIREBASE_CREDENTIALS')
+    if cred_json:
+        cred = credentials.Certificate(json.loads(cred_json))
+    elif os.path.exists('firebase_credentials.json'):
+        cred = credentials.Certificate('firebase_credentials.json')
+    else:
+        # Cloud Run / GCP: usa Application Default Credentials
+        cred = None
+    options = {'projectId': app.config.get('FIREBASE_PROJECT_ID')}
+    firebase_admin.initialize_app(cred, options)
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'

@@ -11,7 +11,7 @@ from google.cloud import firestore
 class User(UserMixin):
     collection_name = 'users'
 
-    def __init__(self, uid, username, password_hash, role='giocatore', team_id=None):
+    def __init__(self, uid, username, password_hash, role='capitano', team_id=None):
         self.id = uid  # UserMixin requires an 'id' property
         self.username = username
         self.password_hash = password_hash
@@ -19,7 +19,7 @@ class User(UserMixin):
         self.team_id = team_id
 
     @staticmethod
-    def create(username, password, role='giocatore', team_id=None):
+    def create(username, password, role='capitano', team_id=None):
         user_data = {
             'username': username,
             'password_hash': generate_password_hash(password),
@@ -108,6 +108,13 @@ class Team:
             'roster': firestore.ArrayUnion([player_data])
         })
 
+    @staticmethod
+    def update_coppa_chiosco_points(team_id, delta):
+        """Incrementa (delta=+1) o decrementa (delta=-1) i punti Coppa Chiosco."""
+        db.collection(Team.collection_name).document(team_id).update({
+            'coppa_chiosco_points': firestore.Increment(delta)
+        })
+
 
 # ── Match ───────────────────────────────────────────────────────────────────
 class Match:
@@ -123,6 +130,7 @@ class Match:
             'phase': phase,
             'group': group,
             'played': False,
+            'live': False,
             'match_date': None,
             'match_time': None,
             'man_of_match': None,
@@ -164,19 +172,18 @@ class Match:
             elif goal['team_id'] == match_data['away_team_id']:
                 away_score += 1
                 
-        # Aggiorna il DB
         db.collection(Match.collection_name).document(match_id).update({
             'home_score': home_score,
             'away_score': away_score,
-            'played': True
         })
 
     @staticmethod
-    def add_goal(match_id, team_id, player_name, minute=None):
+    def add_goal(match_id, team_id, player_name, minute=None, is_own_goal=False):
         goal_data = {
             'team_id': team_id,
             'player_name': player_name,
-            'minute': minute
+            'minute': minute,
+            'is_own_goal': is_own_goal,
         }
         doc_ref = db.collection(Match.collection_name).document(match_id)
         doc_ref.update({

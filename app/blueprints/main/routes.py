@@ -1,7 +1,50 @@
-from flask import Blueprint, render_template, abort
+from datetime import date, datetime, timedelta, timezone
+from flask import Blueprint, render_template, abort, jsonify, request
 from app.models import Team, Match
 
 main_bp = Blueprint('main', __name__)
+
+_IT_WEEKDAYS = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica']
+
+# Durata stimata di una partita (deve combaciare col seed).
+DURATA_PARTITA_MIN = 50
+
+# Ordine canonico delle fasi finali (usato per nominare "Giornate" oltre i gironi).
+_PHASE_ORDER = {'Quarti': 1, 'Semifinale': 2, 'Finalina': 3, 'Finale': 4}
+
+
+_CEST = timezone(timedelta(hours=2))  # UTC+2 (ora italiana estiva) per Cloud Run
+
+def _match_status(match, now=None):
+    """Stato di una partita: 'live' | 'played' | 'upcoming'."""
+    if match.get('played'):
+        return 'played'
+    if match.get('live'):
+        return 'live'
+    return 'upcoming'
+
+
+def _format_day_it(day_str):
+    """'2026-06-21' -> 'Mercoledì 21.06'. Falls back to the raw string on parse error."""
+    try:
+        d = datetime.strptime(day_str, '%Y-%m-%d').date()
+        return f"{_IT_WEEKDAYS[d.weekday()]} {d.strftime('%d.%m')}"
+    except (ValueError, TypeError):
+        return day_str
+
+
+def _attach_teams(matches):
+    for m in matches:
+        m['home_team'] = Team.get_by_id(m['home_team_id']) or {"name": "Sconosciuto"}
+        m['away_team'] = Team.get_by_id(m['away_team_id']) or {"name": "Sconosciuto"}
+    return matches
+
+
+def _matches_on(day_str):
+    """Return all matches whose match_date == day_str (YYYY-MM-DD), with teams attached."""
+    all_m = [m for m in Match.get_all() if m.get('match_date') == day_str]
+    all_m.sort(key=lambda m: (m.get('match_time') or '99:99'))
+    return _attach_teams(all_m)
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  STANDINGS CALCULATION — Punti > H2H > Diff. Reti > Goal Fatti
@@ -147,11 +190,181 @@ def _resolve_h2h(tied_teams, all_matches):
 
 @main_bp.route('/')
 def index():
-    """Homepage — group standings."""
+    """Landing — hero + LIVE + Partite della giornata (accordion) + Sponsors."""
+    now = datetime.now()
+    today_str = date.today().isoformat()
+    all_matches = Match.get_all()
+    _attach_teams(all_matches)
+
+    # Calcola lo stato di ogni partita una sola volta
+    for m in all_matches:
+        m['status'] = _match_status(m, now)
+
+    # ── LIVE: davvero in corso adesso (start <= now < start + 40 min)
+    live_matches = [m for m in all_matches if m['status'] == 'live']
+    live_matches.sort(key=lambda m: (m.get('match_time') or '99:99'))
+
+    # ── Partite della giornata: SOLO quelle di OGGI.
+    # Numerazione "Giornata N" calcolata sull'ordine cronologico di tutte le date
+    # presenti nel DB (cosi` se oggi e` G1, G2 o G3 il titolo riflette il numero reale).
+    group_dates = sorted({m['match_date'] for m in all_matches
+                          if m.get('phase') == 'group' and m.get('match_date')})
+    date_to_giornata_num = {d: i + 1 for i, d in enumerate(group_dates)}
+
+    giornate = []
+    if today_str in date_to_giornata_num:
+        matches_today = [m for m in all_matches
+                         if m.get('phase') == 'group' and m.get('match_date') == today_str]
+        matches_today.sort(key=lambda m: (m.get('match_time') or '99:99', m.get('group') or ''))
+        giornate.append({
+            'key': f'g{date_to_giornata_num[today_str]}',
+            'title': f"Giornata {date_to_giornata_num[today_str]}",
+            'label': _format_day_it(today_str),
+            'date': today_str,
+            'matches': matches_today,
+            'counts': _count_status(matches_today),
+            'is_today': True,
+        })
+
+    # Fasi finali (Quarti, Semifinale, Finalina, Finale) -> mostrate solo se oggi.
+    playoff_phases = sorted(
+        {m['phase'] for m in all_matches if m.get('phase') and m['phase'] != 'group'},
+        key=lambda p: _PHASE_ORDER.get(p, 99),
+    )
+    for phase_name in playoff_phases:
+        matches_in_phase = [m for m in all_matches
+                            if m.get('phase') == phase_name and m.get('match_date') == today_str]
+        if not matches_in_phase:
+            continue
+        matches_in_phase.sort(key=lambda m: (m.get('match_time') or '99:99'))
+        giornate.append({
+            'key': f"phase-{phase_name.lower()}",
+            'title': phase_name,
+            'label': _format_day_it(today_str),
+            'date': today_str,
+            'matches': matches_in_phase,
+            'counts': _count_status(matches_in_phase),
+            'is_today': True,
+        })
+
+    # Tutto cio` che mostriamo e` di oggi -> default aperto la prima sezione.
+    open_key = giornate[0]['key'] if giornate else None
+
+    return render_template(
+        'public/landing.html',
+        live_matches=live_matches,
+        giornate=giornate,
+        open_key=open_key,
+        hero_img='hero-home',
+    )
+
+
+def _count_status(matches):
+    """Conta partite per stato (live/played/upcoming)."""
+    counts = {'live': 0, 'played': 0, 'upcoming': 0}
+    for m in matches:
+        counts[m.get('status', 'upcoming')] += 1
+    counts['total'] = len(matches)
+    return counts
+
+
+@main_bp.route('/classifica')
+def classifica():
+    """Group standings (all 4 groups)."""
     groups = {}
     for g in ['A', 'B', 'C', 'D']:
         groups[g] = get_standings(g)
-    return render_template('public/standings.html', groups=groups)
+    return render_template(
+        'public/standings.html',
+        groups=groups,
+        hero_img='hero-classifica',
+    )
+
+
+@main_bp.route('/calendario')
+def calendario():
+    """Calendar — all matches grouped by date (today + upcoming)."""
+    today_str = date.today().isoformat()
+    all_matches_full = Match.get_all()
+    all_matches = [m for m in all_matches_full if (m.get('match_date') or '') >= today_str]
+    _attach_teams(all_matches)
+
+    # Numerazione "Giornata N" basata sull'ordine cronologico di tutte le date
+    # delle partite di girone presenti nel DB (anche passate), cosi` se oggi e` G3
+    # il titolo resta coerente.
+    all_group_dates = sorted({m['match_date'] for m in all_matches_full
+                              if m.get('phase') == 'group' and m.get('match_date')})
+    date_to_giornata_num = {d: i + 1 for i, d in enumerate(all_group_dates)}
+
+    by_date = {}
+    for m in all_matches:
+        by_date.setdefault(m['match_date'], []).append(m)
+    for d in by_date:
+        by_date[d].sort(key=lambda m: (m.get('match_time') or '99:99'))
+
+    days = [
+        {
+            'date': d,
+            'label': _format_day_it(d),
+            'matches': by_date[d],
+            'giornata_num': date_to_giornata_num.get(d),
+            'is_today': d == today_str,
+        }
+        for d in sorted(by_date.keys())
+    ]
+    return render_template(
+        'public/calendario.html',
+        days=days,
+        hero_img='hero-calendario',
+    )
+
+
+@main_bp.route('/risultati')
+def risultati():
+    """Results — live matches at top, then played matches grouped by date (newest first)."""
+    all_matches = Match.get_all()
+    live_matches = [m for m in all_matches if _match_status(m) == 'live']
+    played = [m for m in all_matches if m.get('played')]
+    _attach_teams(live_matches)
+    _attach_teams(played)
+
+    by_date = {}
+    for m in played:
+        d = m.get('match_date') or 'Senza data'
+        by_date.setdefault(d, []).append(m)
+    for d in by_date:
+        by_date[d].sort(key=lambda m: (m.get('match_time') or '00:00'), reverse=True)
+
+    sorted_dates = sorted(by_date.keys(), reverse=True)
+    days = [
+        {'date': d, 'label': _format_day_it(d) if d != 'Senza data' else d, 'matches': by_date[d]}
+        for d in sorted_dates
+    ]
+    return render_template(
+        'public/risultati.html',
+        days=days,
+        live_matches=live_matches,
+        hero_img='hero-risultati',
+    )
+
+
+@main_bp.route('/coppa-chiosco')
+def coppa_chiosco():
+    """Coppa Chiosco — classifica generale per punti assegnati dall'admin."""
+    teams = Team.get_all()
+    teams.sort(key=lambda x: (-(x.get('coppa_chiosco_points') or 0), x.get('name') or ''))
+    return render_template('public/coppa_chiosco.html', teams=teams, hero_img='hero-coppa')
+
+
+@main_bp.route('/coppa-chiosco/json')
+def coppa_chiosco_json():
+    """Endpoint JSON per aggiornamento live della classifica Coppa Chiosco."""
+    teams = Team.get_all()
+    teams.sort(key=lambda x: (-(x.get('coppa_chiosco_points') or 0), x.get('name') or ''))
+    return jsonify([
+        {'name': t['name'], 'points': t.get('coppa_chiosco_points') or 0}
+        for t in teams
+    ])
 
 
 @main_bp.route('/tournament')
@@ -195,13 +408,17 @@ def group_detail(group):
     if group not in ('A', 'B', 'C', 'D'):
         return render_template('public/standings.html', groups={}), 404
 
+    now = datetime.now()
     standings = get_standings(group)
     matches_raw = Match.get_by_group(group)
-    matches = sorted([m for m in matches_raw if m.get('phase') == 'group'], key=lambda x: x['id'])
-    
+    matches = [m for m in matches_raw if m.get('phase') == 'group']
+
     for m in matches:
         m['home_team'] = Team.get_by_id(m['home_team_id']) or {"name": "Sconosciuto"}
         m['away_team'] = Team.get_by_id(m['away_team_id']) or {"name": "Sconosciuto"}
+        m['status'] = _match_status(m, now)
+
+    matches.sort(key=lambda m: (m.get('match_date') or '9999', m.get('match_time') or '99:99'))
 
     return render_template(
         'public/group_detail.html',
@@ -228,10 +445,14 @@ def match_detail_public(match_id):
     away_goals = sorted([g for g in match.get('goals', []) if g['team_id'] == match['away_team_id']], 
                         key=lambda x: (x.get('minute') or 999))
 
+    back = request.args.get('back', '')
+    status = _match_status(match)
     return render_template(
         'public/match_detail.html',
         match=match,
         home_goals=home_goals,
         away_goals=away_goals,
+        back=back,
+        status=status,
     )
 

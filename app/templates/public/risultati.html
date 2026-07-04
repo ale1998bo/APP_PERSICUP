@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% set is_hero = true %}
+{% block title %}Risultati — Torneo Calcio{% endblock %}
+
+{% block content %}
+
+<!-- ─── Hero ───────────────────────────────────────────────────────── -->
+<section class="hero-card">
+    <img src="{{ url_for('static', filename='PC-Type-Risultati.svg') }}" alt="RISULTATI" class="hero-sticker hero-sticker--risultati">
+</section>
+
+<!-- ─── Risultati ──────────────────────────────────────────────────── -->
+<section class="page-section">
+    <div class="container" style="max-width: 560px;">
+        <h2 class="page-title">Risultati</h2>
+
+        {% if live_matches %}
+        <div class="match-block match-block--live">
+            <div class="block-header">
+                <span class="status-badge status-badge--live">LIVE</span> In corso
+            </div>
+            {% for m in live_matches %}
+            <a class="match-row" href="{{ url_for('main.match_detail_public', match_id=m.id, back='risultati') }}">
+                <span class="teams">{{ m.home_team.name }} – {{ m.away_team.name }}</span>
+                <span class="match-row__right">
+                    <span class="meta">{{ m.home_score }}–{{ m.away_score }}</span>
+                    <span class="status-badge status-badge--live">LIVE</span>
+                </span>
+            </a>
+            {% endfor %}
+        </div>
+        <script>setTimeout(() => location.reload(), 30000);</script>
+        {% endif %}
+
+        {% if not days and not live_matches %}
+            <div class="empty-day">Nessuna partita giocata.</div>
+        {% endif %}
+
+        {% for day in days %}
+        <div class="match-block">
+            <div class="block-header">{{ day.label }}</div>
+            {% for m in day.matches %}
+            <a class="match-row" href="{{ url_for('main.match_detail_public', match_id=m.id, back='risultati') }}">
+                <span class="teams">{{ m.home_team.name }} – {{ m.away_team.name }}</span>
+                <span class="meta">{{ m.home_score }}–{{ m.away_score }}</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}

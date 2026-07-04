@@ -1,16 +1,13 @@
-import os
-from flask import Flask, send_from_directory
+from flask import Flask, redirect
 from config import config_by_name
 from app.extensions import init_firebase, login_manager
+from app.storage import get_file_url
 
 
 def create_app(config_name='dev'):
     """Application Factory — creates and configures the Flask app."""
     app = Flask(__name__)
     app.config.from_object(config_by_name[config_name])
-
-    # ── Upload folder ──────────────────────────────────────────────
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
     # ── Extensions ──────────────────────────────────────────────
     init_firebase(app)
@@ -27,13 +24,10 @@ def create_app(config_name='dev'):
     app.register_blueprint(main_bp)
     app.register_blueprint(player_bp)
 
-    # ── Serve uploaded files ───────────────────────────────────────
+    # ── Serve uploaded files (redirect a GCS) ────────────────────
     @app.route('/uploads/<path:filename>')
     def uploaded_file(filename):
-        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
-    with app.app_context():
-        from app import models  # noqa: F401 – ensure models are registered
+        return redirect(get_file_url(filename))
 
     return app
 

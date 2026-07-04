@@ -1,3 +1,44 @@
-﻿firebase_credentials.json
+# Credenziali e segreti
+firebase_credentials.json
+*.pem
+*.key
+.env
+
+# Python
 __pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+venv/
+.venv/
+
+# Flask / SQLite
+instance/
+*.db
+
+# Upload utenti
 uploads/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Docker
+docker-compose.override.yml
+
+# CSV di import temporanei
+imports.csv
+
+# Claude Code
+.claude/

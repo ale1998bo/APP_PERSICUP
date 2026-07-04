@@ -1,0 +1,28 @@
+<!-- ─── Main partner ──────────────────────────────────────────────── -->
+<section class="sponsor-block sponsor-main">
+    <div class="container" style="max-width: 560px;">
+        <div class="sponsor-label">Main partner</div>
+        <div class="sponsor-grid sponsor-grid--main">
+            <span class="sponsor-circle">
+                <img src="{{ url_for('static', filename='img/loghi/Persicup26-Webapp-Main.png') }}" alt="Main Partner">
+            </span>
+            <span class="sponsor-circle sponsor-circle--sm">
+                <img src="{{ url_for('static', filename='img/loghi/Persicup26-Webapp-Main-2.png') }}" alt="Main Partner 2">
+            </span>
+        </div>
+    </div>
+</section>
+
+<!-- ─── Partners ──────────────────────────────────────────────────── -->
+<section class="sponsor-block sponsor-partners">
+    <div class="container" style="max-width: 560px;">
+        <div class="sponsor-label">Partners</div>
+        <div class="sponsor-grid">
+            {% for n in ['02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','34'] %}
+            <span class="sponsor-circle">
+                <img src="{{ url_for('static', filename='img/loghi/Persicup26-Webapp-Sponsor-' ~ n ~ '.png') }}" alt="Sponsor {{ n }}">
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+</section>

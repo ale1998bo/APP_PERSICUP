@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% set is_hero = true %}
+{% block title %}Calendario — Torneo Calcio{% endblock %}
+
+{% block content %}
+
+<!-- ─── Hero ───────────────────────────────────────────────────────── -->
+<section class="hero-card">
+    <img src="{{ url_for('static', filename='PC-Type-Calendario.svg') }}" alt="CALENDARIO" class="hero-sticker hero-sticker--calendario">
+</section>
+
+<!-- ─── Prossime partite ───────────────────────────────────────────── -->
+<section class="page-section">
+    <div class="container" style="max-width: 560px;">
+        <h2 class="page-title">Prossime partite</h2>
+
+        {% if not days %}
+            <div class="empty-day">Nessuna partita in programma.</div>
+        {% endif %}
+
+        {% for day in days %}
+        <details class="day-accordion" {% if day.is_today %}open{% endif %}>
+            <summary>
+                {% if day.giornata_num %}Giornata {{ day.giornata_num }} · {% endif %}{{ day.label }}
+            </summary>
+            <div class="accordion-body">
+                {% for m in day.matches %}
+                <a class="match-row" href="{{ url_for('main.match_detail_public', match_id=m.id) }}">
+                    <span class="teams">{{ m.home_team.name }} – {{ m.away_team.name }}</span>
+                    <span class="meta">{{ m.match_time or '—' }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </details>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}

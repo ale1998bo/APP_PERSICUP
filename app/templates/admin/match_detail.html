@@ -2,263 +2,264 @@
 {% block title %}{{ match.home_team.name }} vs {{ match.away_team.name }} — Admin{% endblock %}
 
 {% block content %}
+<section class="page-section">
+    <div class="container admin-wrap">
 
-<!-- ── Back link ──────────────────────────────────────────────────── -->
-<a href="{{ url_for('admin.match_manager') }}" class="btn btn-sm btn-outline-secondary rounded-pill mb-3">
-    <i class="fa-solid fa-arrow-left me-1"></i>Torna alle Partite
-</a>
+        <a href="{{ url_for('admin.match_manager') }}" class="back-link">← Torna alle partite</a>
 
-<!-- ── Match Header ──────────────────────────────────────────────── -->
-<div class="hero-banner fade-in-up text-center">
-    <div class="d-flex justify-content-center align-items-center gap-4 flex-wrap">
-        <div class="text-end" style="min-width:120px;">
-            <h3 class="mb-0 fw-800">{{ match.home_team.name }}</h3>
-        </div>
-        <div class="px-3">
-            <div style="font-size:2.5rem; font-weight:800; letter-spacing:2px;">
-                {{ match.home_score|default(0) }} - {{ match.away_score|default(0) }}
+        <!-- Match header -->
+        <div class="match-head">
+            <div class="teams-row">
+                <div class="team-name-lg">{{ match.home_team.name }}</div>
+                <div>
+                    <div class="score-big">{{ match.home_score|default(0) }} – {{ match.away_score|default(0) }}</div>
+                    <div class="meta-row">
+                        {% if match.played %}
+                        <span class="chip chip--success">Giocata</span>
+                        {% else %}
+                        <span class="chip chip--muted">Da giocare</span>
+                        {% endif %}
+                        {% if match.phase == 'group' %}
+                        <span class="chip chip--group">Girone {{ match.group }}</span>
+                        {% else %}
+                        <span class="chip chip--phase">{{ match.phase }}</span>
+                        {% endif %}
+                        {% if match.match_date %}
+                        <span class="chip chip--muted">{{ match.match_date }}{% if match.match_time %} · {{ match.match_time }}{% endif %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="team-name-lg">{{ match.away_team.name }}</div>
             </div>
-            {% if match.played %}
-            <span class="badge bg-success rounded-pill">Giocata</span>
-            {% else %}
-            <span class="badge bg-secondary rounded-pill">Da giocare</span>
-            {% endif %}
-            {% if match.phase == 'group' %}
-            <span class="group-badge ms-2">{{ match.group }}</span>
-            {% else %}
-            <span class="badge bg-warning text-dark rounded-pill ms-2">{{ match.phase|upper }}</span>
-            {% endif %}
         </div>
-        <div class="text-start" style="min-width:120px;">
-            <h3 class="mb-0 fw-800">{{ match.away_team.name }}</h3>
-        </div>
-    </div>
-</div>
 
-<div class="row g-4 mt-2">
+        <div class="admin-split">
 
-    <!-- ── Marcatori ─────────────────────────────────────────────── -->
-    <div class="col-lg-7 fade-in-up">
-        <div class="card-premium">
-            <div class="card-header"><i class="fa-solid fa-futbol me-2"></i>Marcatori</div>
-            <div class="card-body">
+            <!-- Marcatori -->
+            <div>
+                <div class="admin-block">
+                    <div class="admin-block-head"><span>Marcatori</span></div>
 
-                <!-- Gol Casa -->
-                <h6 class="fw-700 mb-2"><i class="fa-solid fa-house me-1"></i>{{ match.home_team.name }}</h6>
-                {% if home_goals %}
-                <ul class="list-unstyled mb-3">
-                    {% for g in home_goals %}
-                    <li
-                        class="d-flex justify-content-between align-items-center py-1 border-bottom border-secondary border-opacity-25">
-                        <span>
-                            <i class="fa-solid fa-futbol text-success me-1"></i>
-                            <strong>{{ g.player_name }}</strong>
-                            {% if g.minute %}<small class="text-muted ms-1">{{ g.minute }}'</small>{% endif %}
-                        </span>
-                        <form method="POST" class="d-inline">
-                            <input type="hidden" name="action" value="delete_goal">
-                            <input type="hidden" name="goal_id" value="{{ g.id }}">
-                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-3 py-0 px-1"
-                                onclick="return confirm('Rimuovere questo gol?')">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        </form>
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p class="text-muted mb-3">Nessun gol</p>
-                {% endif %}
+                    <div class="goal-side">
+                        <div class="goal-side-title">{{ match.home_team.name }}</div>
+                        {% if home_goals %}
+                        <ul class="goal-list">
+                            {% for g in home_goals %}
+                            <li>
+                                <span>
+                                    <span class="goal-name">{{ g.player_name }}{% if g.is_own_goal %} <em style="color:#999; font-style:normal;">(aut.)</em>{% endif %}</span>
+                                    {% if g.minute %}<span class="goal-min">{{ g.minute }}'</span>{% endif %}
+                                </span>
+                                <form method="POST" style="display:inline;">
+                                    <input type="hidden" name="action" value="delete_goal">
+                                    <input type="hidden" name="player_name" value="{{ g.player_name }}">
+                                    <input type="hidden" name="minute" value="{{ g.minute }}">
+                                    <button type="submit" class="btn-clean btn-clean--danger"
+                                            onclick="return confirm('Rimuovere questo goal?')">✕</button>
+                                </form>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <div class="goal-empty">Nessun goal</div>
+                        {% endif %}
+                    </div>
 
-                <!-- Gol Ospite -->
-                <h6 class="fw-700 mb-2"><i class="fa-solid fa-plane me-1"></i>{{ match.away_team.name }}</h6>
-                {% if away_goals %}
-                <ul class="list-unstyled mb-3">
-                    {% for g in away_goals %}
-                    <li
-                        class="d-flex justify-content-between align-items-center py-1 border-bottom border-secondary border-opacity-25">
-                        <span>
-                            <i class="fa-solid fa-futbol text-info me-1"></i>
-                            <strong>{{ g.player_name }}</strong>
-                            {% if g.minute %}<small class="text-muted ms-1">{{ g.minute }}'</small>{% endif %}
-                        </span>
-                        <form method="POST" class="d-inline">
-                            <input type="hidden" name="action" value="delete_goal">
-                            <input type="hidden" name="goal_id" value="{{ g.id }}">
-                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-3 py-0 px-1"
-                                onclick="return confirm('Rimuovere questo gol?')">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        </form>
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p class="text-muted mb-3">Nessun gol</p>
-                {% endif %}
+                    <div class="goal-side">
+                        <div class="goal-side-title">{{ match.away_team.name }}</div>
+                        {% if away_goals %}
+                        <ul class="goal-list">
+                            {% for g in away_goals %}
+                            <li>
+                                <span>
+                                    <span class="goal-name">{{ g.player_name }}{% if g.is_own_goal %} <em style="color:#999; font-style:normal;">(aut.)</em>{% endif %}</span>
+                                    {% if g.minute %}<span class="goal-min">{{ g.minute }}'</span>{% endif %}
+                                </span>
+                                <form method="POST" style="display:inline;">
+                                    <input type="hidden" name="action" value="delete_goal">
+                                    <input type="hidden" name="player_name" value="{{ g.player_name }}">
+                                    <input type="hidden" name="minute" value="{{ g.minute }}">
+                                    <button type="submit" class="btn-clean btn-clean--danger"
+                                            onclick="return confirm('Rimuovere questo goal?')">✕</button>
+                                </form>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <div class="goal-empty">Nessun goal</div>
+                        {% endif %}
+                    </div>
+
+                    {% if match.man_of_match %}
+                    <div class="mvp-box">
+                        ★ <strong>Miglior giocatore:</strong> {{ match.man_of_match }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Azioni -->
+            <div>
+
+                <!-- Programmazione -->
+                <div class="admin-block">
+                    <div class="admin-block-head"><span>Programmazione partita</span></div>
+                    <form method="POST">
+                        <input type="hidden" name="action" value="set_datetime">
+                        <div class="form-grid">
+                            <div class="col-6">
+                                <label class="form-clean-label">Data</label>
+                                <input type="date" class="form-clean" name="match_date" value="{{ match.match_date or '' }}">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-clean-label">Orario</label>
+                                <input type="time" class="form-clean" name="match_time" value="{{ match.match_time or '' }}">
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn-clean btn-clean--ghost btn-clean--block">Salva programmazione</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Aggiungi goal -->
+                <div class="admin-block">
+                    <div class="admin-block-head"><span>Aggiungi goal</span></div>
+                    {% if home_roster or away_roster %}
+                    <form method="POST">
+                        <input type="hidden" name="action" value="add_goal">
+                        <div class="form-grid">
+                            <div class="col-12">
+                                <label class="form-clean-label">Squadra</label>
+                                <select class="form-clean" name="team_id" id="goalTeamSelect" required
+                                        onchange="updatePlayerDropdown()">
+                                    <option value="{{ match.home_team_id }}">{{ match.home_team.name }} (Casa)</option>
+                                    <option value="{{ match.away_team_id }}">{{ match.away_team.name }} (Ospite)</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-clean-label">Giocatore</label>
+                                <select class="form-clean" name="player_name" id="goalPlayerSelect" required></select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-clean-label">Minuto (opzionale)</label>
+                                <input type="number" class="form-clean" name="minute" min="1" max="120" placeholder="es. 45">
+                            </div>
+                            <div class="col-12">
+                                <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.9rem; padding:0.25rem 0;">
+                                    <input type="checkbox" name="is_own_goal" value="1"> Autogol
+                                </label>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn-clean btn-clean--block">Registra goal</button>
+                            </div>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="empty-block">
+                        Nessun giocatore in rosa. <a href="{{ url_for('admin.admin_roster') }}" style="color:var(--accent);">Gestisci le rose</a> prima di registrare i goal.
+                    </div>
+                    {% endif %}
+                </div>
 
                 <!-- MVP -->
-                {% if match.man_of_match %}
-                <div class="mt-3 p-2 rounded-3"
-                    style="background:rgba(255,215,0,0.1); border:1px solid rgba(255,215,0,0.3);">
-                    <i class="fa-solid fa-star text-warning me-1"></i>
-                    <strong>Miglior Giocatore:</strong> {{ match.man_of_match }}
+                <div class="admin-block">
+                    <div class="admin-block-head"><span>Miglior giocatore</span></div>
+                    {% if home_roster or away_roster %}
+                    <form method="POST">
+                        <input type="hidden" name="action" value="set_mvp">
+                        <div class="inline-group">
+                            <select class="form-clean" name="man_of_match">
+                                <option value="">— Nessuno —</option>
+                                <optgroup label="{{ match.home_team.name }}">
+                                    {% for p in home_roster %}
+                                    <option value="{{ p.nome }} {{ p.cognome }}" {{ 'selected' if match.man_of_match==p.nome ~ ' ' ~ p.cognome else '' }}>
+                                        {{ p.cognome }} {{ p.nome }}
+                                    </option>
+                                    {% endfor %}
+                                </optgroup>
+                                <optgroup label="{{ match.away_team.name }}">
+                                    {% for p in away_roster %}
+                                    <option value="{{ p.nome }} {{ p.cognome }}" {{ 'selected' if match.man_of_match==p.nome ~ ' ' ~ p.cognome else '' }}>
+                                        {{ p.cognome }} {{ p.nome }}
+                                    </option>
+                                    {% endfor %}
+                                </optgroup>
+                            </select>
+                            <button type="submit" class="btn-clean">Salva</button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="empty-block">Nessun giocatore in rosa.</div>
+                    {% endif %}
                 </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
 
-    <!-- ── Azioni ────────────────────────────────────────────────── -->
-    <div class="col-lg-5 fade-in-up">
-
-        <!-- Programmazione Partita -->
-        <div class="card-premium mb-3">
-            <div class="card-header"><i class="fa-regular fa-calendar-days me-2"></i>Programmazione Partita</div>
-            <div class="card-body">
-                <form method="POST">
-                    <input type="hidden" name="action" value="set_datetime">
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-500 text-secondary" style="font-size:0.85rem;">Data della Partita</label>
-                        <input type="date" class="form-control" name="match_date" value="{{ match.match_date or '' }}"
-                            style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
+                <!-- Stato partita -->
+                <div class="admin-block">
+                    <div class="admin-block-head"><span>Stato partita</span></div>
+                    {% if match.played %}
+                    <form method="POST">
+                        <input type="hidden" name="action" value="mark_unplayed">
+                        <button type="submit" class="btn-clean btn-clean--ghost btn-clean--block"
+                                onclick="return confirm('Riportare la partita a Da giocare?')">
+                            Riporta a Da giocare
+                        </button>
+                    </form>
+                    {% elif match.live %}
+                    <div style="margin-bottom:0.5rem;">
+                        <span class="status-badge status-badge--live">LIVE attivo</span>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-500 text-secondary" style="font-size:0.85rem;">Orario</label>
-                        <input type="time" class="form-control" name="match_time" value="{{ match.match_time or '' }}"
-                            style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
-                    </div>
-
-                    <button type="submit" class="btn btn-outline-accent w-100 rounded-3 fw-600">
-                        <i class="fa-solid fa-save me-2"></i>Salva Programmazione
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Aggiungi Gol -->
-        <div class="card-premium mb-3">
-            <div class="card-header"><i class="fa-solid fa-plus me-2"></i>Aggiungi Gol</div>
-            <div class="card-body">
-                {% if home_roster or away_roster %}
-                <form method="POST">
-                    <input type="hidden" name="action" value="add_goal">
-
-                    <div class="mb-2">
-                        <label class="form-label fw-500 text-secondary" style="font-size:0.85rem;">Squadra</label>
-                        <select class="form-select" name="team_id" id="goalTeamSelect" required
-                            onchange="updatePlayerDropdown()"
-                            style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
-                            <option value="{{ match.home_team_id }}">{{ match.home_team.name }} (Casa)</option>
-                            <option value="{{ match.away_team_id }}">{{ match.away_team.name }} (Ospite)</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label fw-500 text-secondary" style="font-size:0.85rem;">Giocatore</label>
-                        <select class="form-select" name="player_name" id="goalPlayerSelect" required
-                            style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
-                            <!-- Populated by JS -->
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-500 text-secondary" style="font-size:0.85rem;">Minuto
-                            (opzionale)</label>
-                        <input type="number" class="form-control" name="minute" min="1" max="120" placeholder="es. 45"
-                            style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
-                    </div>
-
-                    <button type="submit" class="btn btn-accent w-100 rounded-3 fw-600">
-                        <i class="fa-solid fa-futbol me-2"></i>Registra Gol
-                    </button>
-                </form>
-                {% else %}
-                <div class="text-center text-muted py-3">
-                    <i class="fa-solid fa-exclamation-triangle text-warning me-1"></i>
-                    Nessun giocatore in rosa. <a href="{{ url_for('admin.admin_roster') }}">Gestisci le rose</a> prima
-                    di registrare i gol.
+                    <form method="POST" style="margin-bottom:0.5rem;">
+                        <input type="hidden" name="action" value="mark_played">
+                        <button type="submit" class="btn-clean btn-clean--block">
+                            Segna come giocata
+                        </button>
+                    </form>
+                    <form method="POST">
+                        <input type="hidden" name="action" value="mark_not_live">
+                        <button type="submit" class="btn-clean btn-clean--ghost btn-clean--block">
+                            Termina LIVE (senza segnare)
+                        </button>
+                    </form>
+                    {% else %}
+                    <form method="POST" style="margin-bottom:0.5rem;">
+                        <input type="hidden" name="action" value="mark_live">
+                        <button type="submit" class="btn-clean btn-clean--block">
+                            ▶ Partita iniziata (LIVE)
+                        </button>
+                    </form>
+                    <form method="POST">
+                        <input type="hidden" name="action" value="mark_played">
+                        <button type="submit" class="btn-clean btn-clean--ghost btn-clean--block">
+                            Segna come giocata
+                        </button>
+                    </form>
+                    {% endif %}
                 </div>
-                {% endif %}
-            </div>
-        </div>
 
-        <!-- Miglior Giocatore -->
-        <div class="card-premium mb-3">
-            <div class="card-header"><i class="fa-solid fa-star me-2"></i>Miglior Giocatore</div>
-            <div class="card-body">
-                {% if home_roster or away_roster %}
-                <form method="POST">
-                    <input type="hidden" name="action" value="set_mvp">
-                    <div class="input-group">
-                        <select class="form-select" name="man_of_match"
-                            style="background:var(--bg-secondary); border-color:var(--border-subtle); color:var(--text-primary);">
-                            <option value="">— Nessuno —</option>
-                            <optgroup label="{{ match.home_team.name }}">
-                                {% for p in home_roster %}
-                                <option value="{{ p.nome }} {{ p.cognome }}" {{ 'selected' if match.man_of_match==p.nome
-                                    ~ ' ' ~ p.cognome else '' }}>
-                                    {{ p.cognome }} {{ p.nome }}
-                                </option>
-                                {% endfor %}
-                            </optgroup>
-                            <optgroup label="{{ match.away_team.name }}">
-                                {% for p in away_roster %}
-                                <option value="{{ p.nome }} {{ p.cognome }}" {{ 'selected' if match.man_of_match==p.nome
-                                    ~ ' ' ~ p.cognome else '' }}>
-                                    {{ p.cognome }} {{ p.nome }}
-                                </option>
-                                {% endfor %}
-                            </optgroup>
-                        </select>
-                        <button type="submit" class="btn btn-accent"><i class="fa-solid fa-check"></i></button>
-                    </div>
-                </form>
-                {% else %}
-                <p class="text-muted text-center mb-0">
-                    <i class="fa-solid fa-exclamation-triangle text-warning me-1"></i>
-                    Nessun giocatore in rosa.
-                </p>
-                {% endif %}
             </div>
         </div>
-
-        <!-- Segna 0-0 -->
-        {% if not match.played %}
-        <div class="card-premium">
-            <div class="card-body text-center">
-                <form method="POST">
-                    <input type="hidden" name="action" value="mark_played">
-                    <button type="submit" class="btn btn-outline-secondary rounded-3 w-100">
-                        <i class="fa-solid fa-check-double me-2"></i>Segna come giocata (0-0)
-                    </button>
-                </form>
-            </div>
-        </div>
-        {% endif %}
 
     </div>
-</div>
+</section>
 
 <script>
-    // Roster data for JS dropdown switching
     const homeRoster = [
         {% for p in home_roster %}
-    { name: "{{ p.nome }} {{ p.cognome }}", label: "{{ p.cognome }} {{ p.nome }}" },
-    {% endfor %}
-];
+        { name: "{{ p.nome }} {{ p.cognome }}", label: "{{ p.cognome }} {{ p.nome }}" },
+        {% endfor %}
+    ];
     const awayRoster = [
         {% for p in away_roster %}
-    { name: "{{ p.nome }} {{ p.cognome }}", label: "{{ p.cognome }} {{ p.nome }}" },
-    {% endfor %}
-];
+        { name: "{{ p.nome }} {{ p.cognome }}", label: "{{ p.cognome }} {{ p.nome }}" },
+        {% endfor %}
+    ];
     const homeTeamId = "{{ match.home_team_id }}";
 
     function updatePlayerDropdown() {
         const sel = document.getElementById('goalTeamSelect');
         const playerSel = document.getElementById('goalPlayerSelect');
+        if (!sel || !playerSel) return;
         const roster = (sel.value === homeTeamId) ? homeRoster : awayRoster;
 
         playerSel.innerHTML = '';
@@ -278,8 +279,6 @@
         }
     }
 
-    // Initialize on page load
     document.addEventListener('DOMContentLoaded', updatePlayerDropdown);
 </script>
-
 {% endblock %}

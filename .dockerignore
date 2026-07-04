@@ -1,0 +1,41 @@
+# Credenziali e segreti
+firebase_credentials.json
+*.pem
+*.key
+.env
+
+# Git
+.git
+.gitignore
+.gcloudignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.egg-info/
+venv/
+.venv/
+
+# Flask / SQLite
+instance/
+*.db
+
+# Upload locali
+uploads/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Node
+node_modules
+
+# Docker
+Dockerfile
+docker-compose*.yml

@@ -79,21 +79,21 @@
                     <table class="table table-premium mb-0">
                         <thead>
                             <tr>
-                                <th>#</th>
+                                <th class="d-none d-md-table-cell">#</th>
                                 <th>Cognome</th>
                                 <th>Nome</th>
-                                <th>Scadenza Visita</th>
-                                <th>Certificato</th>
+                                <th class="d-none d-md-table-cell">Scadenza Visita</th>
+                                <th class="d-none d-lg-table-cell">Certificato</th>
                                 <th>Azioni</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for p in roster_players %}
                             <tr>
-                                <td class="text-muted">{{ loop.index }}</td>
+                                <td class="text-muted d-none d-md-table-cell">{{ loop.index }}</td>
                                 <td class="fw-600">{{ p.cognome }}</td>
                                 <td>{{ p.nome }}</td>
-                                <td>
+                                <td class="d-none d-md-table-cell">
                                     {% if p.scadenza_visita_medica %}
                                         {% if p.scadenza_visita_medica < today %}
                                         <span class="badge bg-danger rounded-pill">
@@ -110,7 +110,7 @@
                                     </span>
                                     {% endif %}
                                 </td>
-                                <td>
+                                <td class="d-none d-lg-table-cell">
                                     {% if p.file_visita_medica %}
                                     <a href="{{ url_for('uploaded_file', filename=p.file_visita_medica) }}"
                                         target="_blank" class="btn btn-sm btn-outline-info rounded-3">

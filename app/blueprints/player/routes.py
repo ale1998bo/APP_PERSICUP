@@ -1,4 +1,3 @@
-import os
 import uuid
 from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
@@ -6,6 +5,7 @@ from flask_login import login_required, current_user
 from app.extensions import db
 from app.models import Team
 from app.blueprints.auth.routes import role_required
+from app.storage import upload_file, delete_file
 
 player_bp = Blueprint('player', __name__, url_prefix='/player')
 
@@ -54,8 +54,7 @@ def roster():
         if file and file.filename and _allowed_file(file.filename):
             ext = file.filename.rsplit('.', 1)[1].lower()
             unique_name = f"{uuid.uuid4().hex}.{ext}"
-            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_name)
-            file.save(filepath)
+            upload_file(file, unique_name)
             filename_saved = unique_name
 
         player_data = {
@@ -97,11 +96,8 @@ def delete_roster_player(cognome):
     for p in team.get('roster', []):
         if p.get('cognome') == cognome and not found:
             found = True
-            # Delete uploaded file if exists
             if p.get('file_visita_medica'):
-                filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], p['file_visita_medica'])
-                if os.path.exists(filepath):
-                    os.remove(filepath)
+                delete_file(p['file_visita_medica'])
             continue
         new_roster.append(p)
 

@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block title %}Coppa Chiosco — Admin{% endblock %}
+
+{% block content %}
+<div class="admin-wrap">
+
+    <div class="admin-head">
+        <h2 class="page-title">Coppa Chiosco</h2>
+    </div>
+
+    {% if teams %}
+    <div class="admin-block admin-block--flush">
+        <div class="admin-block-head">
+            <span>Classifica &amp; Punti</span>
+            <span class="chip chip--muted">{{ teams|length }} squadre</span>
+        </div>
+        <ul class="coppa-list" id="coppaList">
+            {% for team in teams %}
+            <li class="coppa-item" data-team-id="{{ team.id }}">
+                <span class="coppa-pos">{{ loop.index }}</span>
+                <span class="coppa-name">{{ team.name }}</span>
+                <div class="coppa-controls">
+                    <button class="coppa-btn coppa-btn--minus" data-action="remove" data-team-id="{{ team.id }}" aria-label="-1">−</button>
+                    <span class="coppa-pts" id="pts-{{ team.id }}">{{ team.coppa_chiosco_points or 0 }}</span>
+                    <button class="coppa-btn coppa-btn--plus" data-action="add" data-team-id="{{ team.id }}" aria-label="+1">+</button>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+    <div class="empty-block">Nessuna squadra trovata.</div>
+    {% endif %}
+
+</div>
+
+<style>
+.coppa-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.coppa-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+.coppa-item:last-child { border-bottom: none; }
+.coppa-pos {
+    font-size: 0.78rem;
+    color: #8a8a8a;
+    min-width: 22px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+.coppa-name {
+    flex: 1;
+    font-size: 0.95rem;
+    color: #111;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.coppa-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+.coppa-pts {
+    font-size: 1.25rem;
+    font-weight: 600;
+    min-width: 2.2rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    color: #111;
+    transition: color 0.2s;
+}
+.coppa-pts.flash-up   { color: var(--accent); }
+.coppa-pts.flash-down { color: var(--danger); }
+.coppa-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1.5px solid #d8d8d8;
+    background: #fff;
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    color: #444;
+}
+.coppa-btn--plus:hover  { background: var(--accent); border-color: var(--accent); color: #fff; }
+.coppa-btn--minus:hover { background: var(--danger);  border-color: var(--danger);  color: #fff; }
+.coppa-btn:active { transform: scale(0.92); }
+.coppa-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+
+<script>
+(function () {
+    const ENDPOINT = (teamId, action) =>
+        `/admin/coppa-chiosco/${teamId}/points`;
+
+    document.querySelectorAll('.coppa-btn').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const teamId = this.dataset.teamId;
+            const action = this.dataset.action;
+            const ptsEl = document.getElementById('pts-' + teamId);
+
+            this.disabled = true;
+
+            try {
+                const fd = new FormData();
+                fd.append('action', action);
+                const res = await fetch(`/admin/coppa-chiosco/${teamId}/points`, {
+                    method: 'POST',
+                    body: fd,
+                });
+                if (!res.ok) throw new Error('Errore server');
+                const data = await res.json();
+
+                ptsEl.textContent = data.points;
+
+                // Flash colore
+                const cls = action === 'add' ? 'flash-up' : 'flash-down';
+                ptsEl.classList.add(cls);
+                setTimeout(() => ptsEl.classList.remove(cls), 600);
+
+                // Riordina la lista per punti decrescenti
+                reorder();
+
+            } catch (e) {
+                alert('Errore aggiornamento punti.');
+            } finally {
+                this.disabled = false;
+            }
+        });
+    });
+
+    function reorder() {
+        const list = document.getElementById('coppaList');
+        const items = Array.from(list.querySelectorAll('.coppa-item'));
+        items.sort((a, b) => {
+            const pa = parseInt(a.querySelector('.coppa-pts').textContent) || 0;
+            const pb = parseInt(b.querySelector('.coppa-pts').textContent) || 0;
+            return pb - pa;
+        });
+        items.forEach((item, i) => {
+            item.querySelector('.coppa-pos').textContent = i + 1;
+            list.appendChild(item);
+        });
+    }
+})();
+</script>
+
+{% endblock %}

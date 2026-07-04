@@ -1,10 +1,36 @@
 .gcloudignore
 .git
 .gitignore
-node_modules
+
+# Credenziali e segreti
+firebase_credentials.json
+*.pem
+*.key
+.env
+
+# Python
 __pycache__
 *.pyc
+*.pyo
+*.egg-info/
+venv/
+.venv/
+
+# Flask / SQLite
+instance/
+*.db
+
+# Upload locali
+uploads/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
 .DS_Store
-# Escludi file temporanei di OneDrive/Windows
-.db
-.ini
+Thumbs.db
+Desktop.ini
+
+# Node
+node_modules

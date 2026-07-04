@@ -1,29 +1,25 @@
 import os
+from dotenv import load_dotenv
 
-basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv()
 
 
 class Config:
     """Base configuration."""
     SECRET_KEY = os.environ.get('SECRET_KEY', 'super-secret-key-change-in-prod')
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    UPLOAD_FOLDER = os.path.join(basedir, 'uploads')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB
+    GCS_BUCKET_NAME = os.environ.get('GCS_BUCKET_NAME', 'persicup-a49df.firebasestorage.app')
+    FIREBASE_PROJECT_ID = os.environ.get('FIREBASE_PROJECT_ID', 'persicup-a49df')
 
 
 class DevConfig(Config):
-    """Development configuration — SQLite."""
+    """Development configuration."""
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        'DATABASE_URL',
-        'sqlite:///' + os.path.join(basedir, 'instance', 'torneo.db')
-    )
 
 
 class ProdConfig(Config):
-    """Production configuration — PostgreSQL on GCP."""
+    """Production configuration — GCP."""
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
 
 
 config_by_name = {
